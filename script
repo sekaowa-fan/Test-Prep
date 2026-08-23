@@ -1,0 +1,649 @@
+<script>
+/* ===== 操作系を安定させた bind() ===== */
+function bind(){
+
+  /* -------------------------
+     共通ボタン
+  ------------------------- */
+  $("newTest")?.addEventListener("click",newTest);
+
+  $("addProblem")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    addProblem();
+  });
+
+  $("saveCreate")?.addEventListener("click",e=>{
+    e.preventDefault();
+    test().name=$("testName").value.trim()||"無題のテスト";
+    saveDB();
+    go("home");
+  });
+
+  document.querySelectorAll(".playTest").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      state.testId=b.dataset.id;
+      state.answerIndex=0;
+      state.hintOn=true;
+      go("play");
+    });
+  });
+
+  document.querySelectorAll(".settingsTest").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      state.testId=b.dataset.id;
+      go("settings");
+    });
+  });
+
+  document.querySelectorAll(".editProblem").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      state.problemId=b.dataset.id;
+      loadEditor();
+      go("edit");
+    });
+  });
+
+
+  /* -------------------------
+     問題削除
+  ------------------------- */
+  document.querySelectorAll(".deleteProblem").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id=b.dataset.id;
+      const t=test();
+
+      if(!t)return;
+
+      if(!confirm("この問題を削除しますか？"))return;
+
+      t.problems=t.problems.filter(p=>p.id!==id);
+
+      saveDB();
+      render();
+    });
+  });
+
+
+  /* -------------------------
+     ホームへ
+  ------------------------- */
+  $("backHome")?.addEventListener("click",e=>{
+    e.preventDefault();
+    go("home");
+  });
+
+
+  /* -------------------------
+     設定
+  ------------------------- */
+  $("settingName")?.addEventListener("change",()=>{
+    test().name=$("settingName").value.trim()||"無題のテスト";
+    saveDB();
+  });
+
+  $("fixed")?.addEventListener("change",e=>{
+    db.fixedId=e.target.checked?test().id:null;
+    saveDB();
+    render();
+  });
+
+  $("deleteTest")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const t=test();
+    if(!t)return;
+
+    if(!confirm("このテストを削除しますか？"))return;
+
+    if(db.fixedId===t.id){
+      db.fixedId=null;
+    }
+
+    db.tests=db.tests.filter(x=>x.id!==t.id);
+
+    saveDB();
+    go("home");
+  });
+
+
+  /* -------------------------
+     画像追加
+  ------------------------- */
+  $("pickImage")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const input=$("imageInput");
+    if(input)input.click();
+  });
+
+  $("imageInput")?.addEventListener("change",e=>{
+    const f=e.target.files?.[0];
+
+    if(!f)return;
+
+    fileToData(f,d=>{
+      state.editImage=d;
+      render();
+    });
+  });
+
+
+  /* -------------------------
+     問題保存
+  ------------------------- */
+  $("saveProblem")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    saveProblem();
+  });
+
+
+  /* =====================================================
+     隠す場所を追加
+  ===================================================== */
+  $("addMask")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(!state.editImage){
+      toast("先に画像を追加してください");
+      return;
+    }
+
+    const m={
+      id:uid(),
+      x:35,
+      y:35,
+      w:30,
+      h:15,
+      hint:"",
+      revealed:false
+    };
+
+    state.masks.push(m);
+    state.selectedMask=m.id;
+
+    render();
+  });
+
+
+  /* =====================================================
+     ヒント追加
+  ===================================================== */
+  $("addHint")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(state.masks.length===0){
+      toast("先に隠し場所を追加してください");
+      return;
+    }
+
+    let m=state.masks.find(
+      x=>x.id===state.selectedMask
+    );
+
+    if(!m){
+      m=state.masks[0];
+      state.selectedMask=m.id;
+    }
+
+    askHint(m.id);
+  });
+
+
+  /* =====================================================
+     個別ヒント編集
+  ===================================================== */
+  document.querySelectorAll(".hintEdit").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      const m=state.masks.find(
+        x=>x.id===b.dataset.mid
+      );
+
+      if(!m)return;
+
+      state.selectedMask=m.id;
+      askHint(m.id);
+    });
+  });
+
+
+  /* =====================================================
+     隠し場所削除
+  ===================================================== */
+  document.querySelectorAll(".delMask").forEach(b=>{
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id=b.dataset.mid;
+
+      state.masks=state.masks.filter(
+        m=>m.id!==id
+      );
+
+      if(state.selectedMask===id){
+        state.selectedMask=null;
+      }
+
+      render();
+    });
+  });
+
+
+  /* =====================================================
+     現在編集中の問題を削除
+  ===================================================== */
+  $("deleteCurrentProblem")?.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const t=test();
+
+    if(!t)return;
+
+    if(!confirm("この問題を削除しますか？"))return;
+
+    t.problems=t.problems.filter(
+      p=>p.id!==state.problemId
+    );
+
+    saveDB();
+
+    state.problemId=null;
+    state.masks=[];
+    state.selectedMask=null;
+
+    go("create");
+  });
+
+
+  /* =====================================================
+     赤枠操作
+  ===================================================== */
+  document.querySelectorAll(".mask").forEach(el=>{
+
+    const m=state.masks.find(
+      x=>x.id===el.dataset.mid
+    );
+
+    if(!m)return;
+
+
+    /* -------------------------
+       移動
+    ------------------------- */
+    el.addEventListener("pointerdown",e=>{
+
+      /* サイズ変更用ハンドルなら移動処理をしない */
+      if(e.target.closest(".handle"))return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      state.selectedMask=m.id;
+
+      document.querySelectorAll(".mask")
+        .forEach(x=>x.classList.remove("selected"));
+
+      el.classList.add("selected");
+
+      const editor=$("editor");
+
+      if(!editor)return;
+
+      const box=editor.getBoundingClientRect();
+
+      const startX=e.clientX;
+      const startY=e.clientY;
+
+      const originalX=m.x;
+      const originalY=m.y;
+
+      try{
+        el.setPointerCapture(e.pointerId);
+      }catch(_){}
+
+      const move=ev=>{
+
+        const dx=
+          (ev.clientX-startX)/
+          box.width*100;
+
+        const dy=
+          (ev.clientY-startY)/
+          box.height*100;
+
+        m.x=Math.max(
+          0,
+          Math.min(
+            100-m.w,
+            originalX+dx
+          )
+        );
+
+        m.y=Math.max(
+          0,
+          Math.min(
+            100-m.h,
+            originalY+dy
+          )
+        );
+
+        /* 再描画せず直接変更 */
+        el.style.left=m.x+"%";
+        el.style.top=m.y+"%";
+      };
+
+      const stop=()=>{
+        el.removeEventListener(
+          "pointermove",
+          move
+        );
+
+        el.removeEventListener(
+          "pointerup",
+          stop
+        );
+
+        el.removeEventListener(
+          "pointercancel",
+          stop
+        );
+      };
+
+      el.addEventListener(
+        "pointermove",
+        move
+      );
+
+      el.addEventListener(
+        "pointerup",
+        stop
+      );
+
+      el.addEventListener(
+        "pointercancel",
+        stop
+      );
+    });
+
+
+    /* -------------------------
+       サイズ変更
+    ------------------------- */
+    const handle=el.querySelector(".handle");
+
+    if(handle){
+
+      handle.addEventListener(
+        "pointerdown",
+        e=>{
+
+          e.preventDefault();
+          e.stopPropagation();
+
+          state.selectedMask=m.id;
+
+          const editor=$("editor");
+
+          if(!editor)return;
+
+          const box=
+            editor.getBoundingClientRect();
+
+          const startX=e.clientX;
+          const startY=e.clientY;
+
+          const originalW=m.w;
+          const originalH=m.h;
+
+          try{
+            handle.setPointerCapture(
+              e.pointerId
+            );
+          }catch(_){}
+
+          const move=ev=>{
+
+            const dx=
+              (ev.clientX-startX)/
+              box.width*100;
+
+            const dy=
+              (ev.clientY-startY)/
+              box.height*100;
+
+            m.w=Math.max(
+              5,
+              Math.min(
+                100-m.x,
+                originalW+dx
+              )
+            );
+
+            m.h=Math.max(
+              5,
+              Math.min(
+                100-m.y,
+                originalH+dy
+              )
+            );
+
+            el.style.width=m.w+"%";
+            el.style.height=m.h+"%";
+          };
+
+          const stop=()=>{
+
+            handle.removeEventListener(
+              "pointermove",
+              move
+            );
+
+            handle.removeEventListener(
+              "pointerup",
+              stop
+            );
+
+            handle.removeEventListener(
+              "pointercancel",
+              stop
+            );
+          };
+
+          handle.addEventListener(
+            "pointermove",
+            move
+          );
+
+          handle.addEventListener(
+            "pointerup",
+            stop
+          );
+
+          handle.addEventListener(
+            "pointercancel",
+            stop
+          );
+        }
+      );
+    }
+  });
+
+
+  /* =====================================================
+     問題並び替え
+  ===================================================== */
+  document
+    .querySelectorAll(".problem-row[draggable]")
+    .forEach(row=>{
+
+      row.addEventListener(
+        "dragstart",
+        e=>{
+          e.dataTransfer.setData(
+            "text/plain",
+            row.dataset.pid
+          );
+        }
+      );
+
+      row.addEventListener(
+        "dragover",
+        e=>{
+          e.preventDefault();
+          row.classList.add("drop-target");
+        }
+      );
+
+      row.addEventListener(
+        "dragleave",
+        ()=>{
+          row.classList.remove(
+            "drop-target"
+          );
+        }
+      );
+
+      row.addEventListener(
+        "drop",
+        e=>{
+
+          e.preventDefault();
+
+          row.classList.remove(
+            "drop-target"
+          );
+
+          const from=
+            e.dataTransfer.getData(
+              "text/plain"
+            );
+
+          const to=row.dataset.pid;
+
+          const t=test();
+
+          if(!t)return;
+
+          const a=t.problems.findIndex(
+            p=>p.id===from
+          );
+
+          const b=t.problems.findIndex(
+            p=>p.id===to
+          );
+
+          if(a<0||b<0)return;
+
+          const [item]=
+            t.problems.splice(a,1);
+
+          t.problems.splice(
+            b,
+            0,
+            item
+          );
+
+          saveDB();
+          render();
+        }
+      );
+    });
+
+
+  /* =====================================================
+     解答画面
+  ===================================================== */
+  $("hintToggle")?.addEventListener(
+    "change",
+    e=>{
+      state.hintOn=e.target.checked;
+      render();
+    }
+  );
+
+
+  document
+    .querySelectorAll(".answer-mask")
+    .forEach(el=>{
+
+      el.addEventListener(
+        "pointerup",
+        e=>{
+
+          e.preventDefault();
+          e.stopPropagation();
+
+          const p=problem();
+
+          if(!p)return;
+
+          const m=p.masks.find(
+            x=>x.id===el.dataset.mid
+          );
+
+          if(!m)return;
+
+          m.revealed=!m.revealed;
+
+          render();
+        }
+      );
+    });
+
+
+  $("prev")?.addEventListener(
+    "click",
+    e=>{
+      e.preventDefault();
+
+      if(state.answerIndex>0){
+        state.answerIndex--;
+        render();
+      }
+    }
+  );
+
+
+  $("next")?.addEventListener(
+    "click",
+    e=>{
+      e.preventDefault();
+
+      if(
+        state.answerIndex<
+        test().problems.length-1
+      ){
+        state.answerIndex++;
+        render();
+      }else{
+        go("home");
+      }
+    }
+  );
+
+
+  $("quit")?.addEventListener(
+    "click",
+    ()=>go("home")
+  );
+}
+</script>
