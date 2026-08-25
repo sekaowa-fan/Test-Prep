@@ -2077,83 +2077,224 @@ function setupMaskControls(){
           row.classList.remove(
             "drop-target"
           );
+function enableSorting(){
 
-          let fromId =
-            draggedId;
+  const list =
+    $("problem-list");
 
-          if(
-            !fromId &&
-            event.dataTransfer
-          ){
+  if(!list){
+    return;
+  }
 
-            fromId =
-              event.dataTransfer.getData(
-                "text/plain"
+  const rows =
+    list.querySelectorAll(
+      ".problem-row[draggable='true']"
+    );
+
+  let draggedRow =
+    null;
+
+  rows.forEach(row => {
+
+    row.addEventListener(
+      "pointerdown",
+      function(event){
+
+        if(
+          event.target.closest("button")
+        ){
+          return;
+        }
+
+        draggedRow =
+          row;
+
+        row.classList.add(
+          "dragging"
+        );
+
+        row.setPointerCapture(
+          event.pointerId
+        );
+
+      }
+    );
+
+    row.addEventListener(
+      "pointermove",
+      function(event){
+
+        if(
+          !draggedRow ||
+          draggedRow !== row
+        ){
+          return;
+        }
+
+        event.preventDefault();
+
+        const elements =
+          [
+            ...list.querySelectorAll(
+              ".problem-row[draggable='true']:not(.dragging)"
+            )
+          ];
+
+        let closest =
+          null;
+
+        let closestDistance =
+          Infinity;
+
+        elements.forEach(
+          element => {
+
+            const rect =
+              element.getBoundingClientRect();
+
+            const center =
+              rect.top +
+              rect.height / 2;
+
+            const distance =
+              Math.abs(
+                event.clientY -
+                center
               );
 
-          }
+            if(
+              distance <
+              closestDistance
+            ){
 
-          const toId =
-            row.dataset.problemId;
+              closest =
+                element;
 
-          if(
-            !fromId ||
-            !toId ||
-            fromId === toId
-          ){
+              closestDistance =
+                distance;
 
-            return;
-
-          }
-
-          const test =
-            getTest();
-
-          if(!test){
-
-            return;
+            }
 
           }
+        );
 
-          const fromIndex =
-            test.problems.findIndex(
-              p => p.id === fromId
-            );
+        if(
+          closest &&
+          event.clientY <
+          closest.getBoundingClientRect().top +
+          closest.getBoundingClientRect().height / 2
+        ){
 
-          const toIndex =
-            test.problems.findIndex(
-              p => p.id === toId
-            );
-
-          if(
-            fromIndex === -1 ||
-            toIndex === -1
-          ){
-
-            return;
-
-          }
-
-          const moved =
-            test.problems.splice(
-              fromIndex,
-              1
-            )[0];
-
-          test.problems.splice(
-            toIndex,
-            0,
-            moved
+          list.insertBefore(
+            row,
+            closest
           );
 
-          saveDB();
+        }else if(closest){
 
-          render();
+          list.insertBefore(
+            row,
+            closest.nextSibling
+          );
 
         }
+
+      }
+    );
+
+    row.addEventListener(
+      "pointerup",
+      function(){
+
+        if(!draggedRow){
+          return;
+        }
+
+        draggedRow.classList.remove(
+          "dragging"
+        );
+
+        saveProblemOrder();
+
+        draggedRow =
+          null;
+
+      }
+    );
+
+    row.addEventListener(
+      "pointercancel",
+      function(){
+
+        if(!draggedRow){
+          return;
+        }
+
+        draggedRow.classList.remove(
+          "dragging"
+        );
+
+        draggedRow =
+          null;
+
+      }
+    );
+
+  });
+
+}
+
+function saveProblemOrder(){
+
+  const test =
+    getTest();
+
+  const list =
+    $("problem-list");
+
+  if(
+    !test ||
+    !list
+  ){
+    return;
+  }
+
+  const ids =
+    [
+      ...list.querySelectorAll(
+        ".problem-row[data-problem-id]"
+      )
+    ].map(
+      row =>
+        row.dataset.problemId
+    );
+
+  const newProblems = [];
+
+  ids.forEach(id => {
+
+    const problem =
+      test.problems.find(
+        p => p.id === id
+      );
+
+    if(problem){
+
+      newProblems.push(
+        problem
       );
 
     }
+
+  });
+
+  test.problems =
+    newProblems;
+
+  saveDB();
+
+  showToast(
+    "並び順を保存しました"
   );
 
 }
