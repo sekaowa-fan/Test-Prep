@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0285FF">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+>
+
+<meta
+  name="theme-color"
+  content="#0285FF"
+>
 
 <title>テスト前対策アプリ</title>
 
@@ -40,6 +49,7 @@ input{
 
 button{
   border:0;
+  cursor:pointer;
 }
 
 .app{
@@ -62,12 +72,19 @@ button{
   line-height:1.3;
 }
 
-.primary,
+.primary{
+  padding:12px 16px;
+  border-radius:12px;
+  background:#0285FF;
+  color:#fff;
+  font-weight:700;
+}
+
 .blue{
   padding:12px 16px;
   border-radius:12px;
   background:#0285FF;
-  color:white;
+  color:#fff;
   font-weight:700;
 }
 
@@ -119,6 +136,7 @@ input[type="text"]{
   border:1px solid #ccd3da;
   border-radius:12px;
   outline:none;
+  background:#fff;
 }
 
 input[type="text"]:focus{
@@ -126,39 +144,103 @@ input[type="text"]:focus{
 }
 
 /* =========================
+   テスト一覧
+========================= */
+
+.test-card{
+  position:relative;
+}
+
+.test-title{
+  margin-bottom:12px;
+  font-size:18px;
+  font-weight:700;
+}
+
+.fixed-badge{
+  display:inline-block;
+  margin-left:6px;
+  padding:3px 7px;
+  border-radius:8px;
+  background:#e8f3ff;
+  color:#0285FF;
+  font-size:11px;
+  font-weight:700;
+}
+
+/* =========================
    問題一覧
 ========================= */
 
 .problem-row{
-  position:relative;
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
   width:100%;
-  min-height:54px;
+  min-height:58px;
   margin:8px 0;
-  padding:10px 12px;
-  border:1px solid #e2e7ec;
-  border-radius:13px;
+  padding:8px 10px;
+  border:1px solid #e1e6eb;
+  border-radius:14px;
   background:#fff;
-  touch-action:none;
+
+  /*
+    並び替え中のブラウザ標準操作を防止
+  */
+  touch-action:pan-y;
 }
 
 .problem-row.dragging{
-  opacity:.5;
+  opacity:.45;
   transform:scale(.98);
 }
 
-.problem-row.drag-over{
-  border:2px dashed #0285FF;
+.problem-row.drop-before{
+  border-top:3px solid #0285FF;
 }
 
-.drag-handle{
+.problem-row.drop-after{
+  border-bottom:3px solid #0285FF;
+}
+
+/*
+  並び替え専用ボタン
+*/
+.sort-handle{
   flex:none;
-  width:30px;
-  text-align:center;
-  color:#888;
+  width:38px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:#f2f4f6;
+
+  color:#777;
+
   font-size:22px;
+
+  user-select:none;
+
+  touch-action:none;
+}
+
+.problem-number{
+  min-width:45px;
+  font-weight:700;
+}
+
+.problem-status{
+  font-size:12px;
+  color:#777;
+}
+
+.problem-actions{
+  display:flex;
+  align-items:center;
+  gap:2px;
 }
 
 /* =========================
@@ -171,7 +253,12 @@ input[type="text"]:focus{
   overflow:hidden;
   border-radius:14px;
   background:#f2f3f5;
+
+  /*
+    画像編集は指で操作する
+  */
   touch-action:none;
+
   user-select:none;
 }
 
@@ -179,39 +266,74 @@ input[type="text"]:focus{
   display:block;
   width:100%;
   height:auto;
+
   pointer-events:none;
   user-select:none;
 }
 
+/*
+  赤枠
+
+  min-width / min-height は設定しない。
+  これが「極細にした時のズレ」を防ぐ。
+*/
 .mask{
   position:absolute;
+
   margin:0;
   padding:0;
+
   border:3px solid #ff3333;
-  background:rgba(255,50,50,.20);
+
+  background:rgba(
+    255,
+    50,
+    50,
+    .18
+  );
+
   min-width:0;
   min-height:0;
+
   touch-action:none;
+
+  user-select:none;
 }
 
 .mask.selected{
-  box-shadow:0 0 0 3px rgba(2,133,255,.35);
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      2,
+      133,
+      255,
+      .35
+    );
 }
 
+/*
+  サイズ変更用
+*/
 .resize-handle{
   position:absolute;
-  right:-10px;
-  bottom:-10px;
-  width:20px;
-  height:20px;
+
+  right:-9px;
+  bottom:-9px;
+
+  width:18px;
+  height:18px;
+
   border:3px solid #0285FF;
+
   border-radius:50%;
+
   background:#fff;
+
   touch-action:none;
 }
 
 /* =========================
-   解答
+   解答画面
 ========================= */
 
 .answer{
@@ -229,10 +351,14 @@ input[type="text"]:focus{
 
 .answer-mask{
   position:absolute;
+
   margin:0;
   padding:0;
+
   border:3px solid #ff3333;
+
   background:#ff3333;
+
   touch-action:none;
 }
 
@@ -241,20 +367,35 @@ input[type="text"]:focus{
 }
 
 /* =========================
-   下部ボタン
+   下部操作
 ========================= */
 
 .bottom-bar{
   position:fixed;
+
   left:0;
   right:0;
   bottom:0;
+
   z-index:100;
+
   display:flex;
+
   gap:10px;
-  padding:10px 16px;
+
+  padding:
+    10px
+    16px
+    calc(
+      10px +
+      env(safe-area-inset-bottom)
+    );
+
   background:#fff;
-  border-top:1px solid #e5e5e5;
+
+  border-top:
+    1px solid
+    #e5e5e5;
 }
 
 .bottom-bar button{
@@ -267,15 +408,46 @@ input[type="text"]:focus{
 
 .toast{
   position:fixed;
+
   left:50%;
-  bottom:80px;
+  bottom:85px;
+
   z-index:300;
-  transform:translateX(-50%);
-  padding:10px 16px;
+
+  transform:
+    translateX(-50%);
+
+  padding:
+    10px 16px;
+
   border-radius:20px;
+
   background:#111;
   color:#fff;
+
   white-space:nowrap;
+
+  font-size:14px;
+}
+
+/* =========================
+   エラー表示
+========================= */
+
+.error-box{
+  margin-top:20px;
+
+  padding:16px;
+
+  border:
+    1px solid
+    #ffcccc;
+
+  border-radius:14px;
+
+  background:#fff5f5;
+
+  color:#b00020;
 }
 
 /* =========================
@@ -287,6 +459,7 @@ input[type="text"]:focus{
 }
 
 </style>
+
 </head>
 
 <body>
@@ -298,27 +471,43 @@ input[type="text"]:focus{
 "use strict";
 
 /* =================================================
-   アプリデータ
+   保存データ
 ================================================= */
 
 const STORAGE_KEY =
+  "test_prep_mobile_v2";
+
+/*
+  旧バージョンのデータも
+  読み込めるようにしておく
+*/
+const OLD_STORAGE_KEY =
   "test_prep_mobile_v1";
 
 let db = {
-  tests: [],
-  fixedId: null
+
+  tests:[],
+
+  fixedId:null
+
 };
 
 let state = {
-  screen: "home",
-  testId: null,
-  problemId: null,
 
-  editImage: null,
-  masks: [],
-  selectedMask: null,
+  screen:"home",
 
-  answerIndex: 0
+  testId:null,
+
+  problemId:null,
+
+  editImage:null,
+
+  masks:[],
+
+  selectedMask:null,
+
+  answerIndex:0
+
 };
   /* =================================================
    基本関数
@@ -350,122 +539,17 @@ function escapeHTML(value){
     function(char){
 
       const map = {
-
         "&":"&amp;",
         "<":"&lt;",
         ">":"&gt;",
         '"':"&quot;",
         "'":"&#39;"
-
       };
 
       return map[char];
 
     }
   );
-
-}
-
-function loadDB(){
-
-  try{
-
-    const saved =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
-
-    if(!saved){
-
-      return;
-
-    }
-
-    const parsed =
-      JSON.parse(saved);
-
-    if(
-      parsed &&
-      Array.isArray(parsed.tests)
-    ){
-
-      db = parsed;
-
-    }
-
-    if(!Array.isArray(db.tests)){
-
-      db.tests = [];
-
-    }
-
-  }catch(error){
-
-    console.error(
-      "データ読み込みエラー",
-      error
-    );
-
-    db = {
-
-      tests:[],
-
-      fixedId:null
-
-    };
-
-  }
-
-}
-
-function saveDB(){
-
-  try{
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(db)
-    );
-
-  }catch(error){
-
-    console.error(
-      "データ保存エラー",
-      error
-    );
-
-    showToast(
-      "保存できませんでした"
-    );
-
-  }
-
-}
-
-function getTest(){
-
-  return db.tests.find(
-    test =>
-      test.id === state.testId
-  ) || null;
-
-}
-
-function getProblem(){
-
-  const test =
-    getTest();
-
-  if(!test){
-
-    return null;
-
-  }
-
-  return test.problems.find(
-    problem =>
-      problem.id === state.problemId
-  ) || null;
 
 }
 
@@ -500,13 +584,287 @@ function showToast(message){
   setTimeout(
     function(){
 
-      toast.remove();
+      if(toast.parentNode){
+
+        toast.remove();
+
+      }
 
     },
     1600
   );
 
 }
+
+/* =================================================
+   データ読み込み
+================================================= */
+
+function normalizeDB(data){
+
+  if(
+    !data ||
+    !Array.isArray(data.tests)
+  ){
+
+    return {
+      tests:[],
+      fixedId:null
+    };
+
+  }
+
+  data.tests.forEach(
+    function(test){
+
+      if(!test.id){
+
+        test.id =
+          uid();
+
+      }
+
+      if(
+        typeof test.name !==
+        "string"
+      ){
+
+        test.name =
+          "無題のテスト";
+
+      }
+
+      if(
+        !Array.isArray(
+          test.problems
+        )
+      ){
+
+        test.problems = [];
+
+      }
+
+      test.problems.forEach(
+        function(problem){
+
+          if(!problem.id){
+
+            problem.id =
+              uid();
+
+          }
+
+          if(
+            typeof problem.image !==
+            "string"
+          ){
+
+            problem.image =
+              "";
+
+          }
+
+          if(
+            !Array.isArray(
+              problem.masks
+            )
+          ){
+
+            problem.masks = [];
+
+          }
+
+          problem.masks.forEach(
+            function(mask){
+
+              if(!mask.id){
+
+                mask.id =
+                  uid();
+
+              }
+
+              mask.x =
+                Number(mask.x) || 0;
+
+              mask.y =
+                Number(mask.y) || 0;
+
+              mask.w =
+                Number(mask.w) || 0;
+
+              mask.h =
+                Number(mask.h) || 0;
+
+            }
+          );
+
+          if(
+            !problem.revealed ||
+            typeof problem.revealed !==
+            "object"
+          ){
+
+            problem.revealed = {};
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+  return {
+
+    tests:data.tests,
+
+    fixedId:
+      data.fixedId || null
+
+  };
+
+}
+
+function loadDB(){
+
+  try{
+
+    let raw =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
+
+    /*
+      v2にデータがなければ、
+      以前のv1を読み込む
+    */
+
+    if(!raw){
+
+      raw =
+        localStorage.getItem(
+          OLD_STORAGE_KEY
+        );
+
+    }
+
+    if(raw){
+
+      db =
+        normalizeDB(
+          JSON.parse(raw)
+        );
+
+      /*
+        v2へ移行して保存
+      */
+
+      saveDB();
+
+    }else{
+
+      db = {
+
+        tests:[],
+
+        fixedId:null
+
+      };
+
+    }
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    db = {
+
+      tests:[],
+
+      fixedId:null
+
+    };
+
+  }
+
+}
+
+function saveDB(){
+
+  try{
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(db)
+    );
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    showToast(
+      "保存できませんでした"
+    );
+
+  }
+
+}
+
+/* =================================================
+   現在のテスト・問題
+================================================= */
+
+function getTest(){
+
+  return (
+    db.tests.find(
+      function(test){
+
+        return (
+          test.id ===
+          state.testId
+        );
+
+      }
+    ) || null
+  );
+
+}
+
+function getProblem(){
+
+  const test =
+    getTest();
+
+  if(!test){
+
+    return null;
+
+  }
+
+  return (
+    test.problems.find(
+      function(problem){
+
+        return (
+          problem.id ===
+          state.problemId
+        );
+
+      }
+    ) || null
+  );
+
+}
+
+/* =================================================
+   画面移動
+================================================= */
 
 function go(screen){
 
@@ -523,7 +881,7 @@ function go(screen){
 }
 
 /* =================================================
-   テスト・問題作成
+   テスト作成
 ================================================= */
 
 function createTest(){
@@ -548,11 +906,24 @@ function createTest(){
   state.problemId =
     null;
 
+  state.editImage =
+    null;
+
+  state.masks =
+    [];
+
+  state.selectedMask =
+    null;
+
   saveDB();
 
   go("create");
 
 }
+
+/* =================================================
+   問題追加
+================================================= */
 
 function addProblem(){
 
@@ -560,6 +931,10 @@ function addProblem(){
     getTest();
 
   if(!test){
+
+    showToast(
+      "テストが選択されていません"
+    );
 
     return;
 
@@ -587,7 +962,8 @@ function addProblem(){
   state.editImage =
     null;
 
-  state.masks = [];
+  state.masks =
+    [];
 
   state.selectedMask =
     null;
@@ -597,6 +973,10 @@ function addProblem(){
   go("edit");
 
 }
+
+/* =================================================
+   問題編集
+================================================= */
 
 function openProblem(id){
 
@@ -611,17 +991,27 @@ function openProblem(id){
 
   const problem =
     test.problems.find(
-      p => p.id === id
+      function(item){
+
+        return (
+          item.id === id
+        );
+
+      }
     );
 
   if(!problem){
+
+    showToast(
+      "問題が見つかりません"
+    );
 
     return;
 
   }
 
   state.problemId =
-    id;
+    problem.id;
 
   state.editImage =
     problem.image ||
@@ -638,1538 +1028,6 @@ function openProblem(id){
     null;
 
   go("edit");
-
-  }
-  /* =================================================
-   ヘッダー
-================================================= */
-
-function header(title, rightHTML = ""){
-
-  return `
-    <header class="header">
-
-      <h1>
-        ${escapeHTML(title)}
-      </h1>
-
-      <div>
-        ${rightHTML}
-      </div>
-
-    </header>
-  `;
-
-}
-
-/* =================================================
-   ホーム画面
-================================================= */
-
-function renderHome(){
-
-  let content = "";
-
-  if(db.tests.length === 0){
-
-    content = `
-      <div class="card muted">
-
-        まだテストがありません。<br>
-        「＋ テスト作成」から作ってみよう！
-
-      </div>
-    `;
-
-  }else{
-
-    const tests =
-      [...db.tests].sort(
-        function(a,b){
-
-          if(db.fixedId === a.id){
-
-            return -1;
-
-          }
-
-          if(db.fixedId === b.id){
-
-            return 1;
-
-          }
-
-          return 0;
-
-        }
-      );
-
-    content =
-      tests.map(
-        function(test){
-
-          const fixed =
-            db.fixedId === test.id
-            ? `
-              <span
-                class="small"
-                style="color:#0285FF">
-                ● 固定中
-              </span>
-            `
-            : "";
-
-          return `
-            <div class="card">
-
-              <div class="test-name">
-
-                ${escapeHTML(test.name)}
-
-                ${fixed}
-
-              </div>
-
-              <div class="row">
-
-                <button
-                  class="blue play-test"
-                  data-id="${test.id}">
-                  解答する
-                </button>
-
-                <button
-                  class="textbtn settings-test"
-                  data-id="${test.id}">
-                  設定
-                </button>
-
-              </div>
-
-            </div>
-          `;
-
-        }
-      ).join("");
-
-  }
-
-  return `
-    <div class="app">
-
-      ${header(
-        "テスト前対策アプリ",
-        `
-          <button
-            class="primary"
-            id="new-test">
-            ＋ テスト作成
-          </button>
-        `
-      )}
-
-      ${content}
-
-    </div>
-  `;
-
-}
-
-/* =================================================
-   テスト作成画面
-================================================= */
-
-function renderCreate(){
-
-  const test =
-    getTest();
-
-  if(!test){
-
-    return `
-      <div class="app">
-
-        ${header("テスト作成")}
-
-        <p>
-          テストが見つかりません。
-        </p>
-
-        <button
-          class="blue"
-          id="back-home">
-          ホームへ戻る
-        </button>
-
-      </div>
-    `;
-
-  }
-
-  const problems =
-    test.problems.map(
-      function(problem,index){
-
-        return `
-          <div
-            class="problem-row"
-            data-problem-id="${problem.id}">
-
-            <div class="drag-handle">
-              ☰
-            </div>
-
-            <div>
-
-              <div
-                class="problem-title">
-                ${index + 1}問目
-              </div>
-
-              <div
-                class="small muted">
-
-                ${
-                  problem.image
-                  ? "画像あり"
-                  : "画像未設定"
-                }
-
-              </div>
-
-            </div>
-
-            <div class="spacer"></div>
-
-            <button
-              class="textbtn edit-problem"
-              data-id="${problem.id}">
-              編集
-            </button>
-
-            <button
-              class="textbtn danger delete-problem"
-              data-id="${problem.id}">
-              削除
-            </button>
-
-          </div>
-        `;
-
-      }
-    ).join("");
-
-  return `
-    <div class="app">
-
-      ${header(
-        "テスト作成",
-        `
-          <button
-            class="blue"
-            id="add-problem">
-            ＋ 問題追加
-          </button>
-        `
-      )}
-
-      <div class="section">
-
-        <label
-          class="small muted">
-          テスト名
-        </label>
-
-        <input
-          id="test-name"
-          type="text"
-          value="${escapeHTML(test.name)}">
-
-      </div>
-
-      <div id="problem-list">
-
-        ${
-          problems ||
-          `
-            <div class="card muted">
-
-              まだ問題がありません。<br>
-              「＋ 問題追加」から問題を作成してください。
-
-            </div>
-          `
-        }
-
-      </div>
-
-      <div class="section">
-
-        <button
-          class="blue"
-          id="save-create">
-          保存してホームへ
-        </button>
-
-      </div>
-
-    </div>
-  `;
-
-}
-
-/* =================================================
-   問題編集画面
-================================================= */
-
-function renderEdit(){
-
-  const problem =
-    getProblem();
-
-  if(!problem){
-
-    return `
-      <div class="app">
-
-        ${header("問題編集")}
-
-        <p>
-          問題が見つかりません。
-        </p>
-
-        <button
-          class="blue"
-          id="back-create">
-          戻る
-        </button>
-
-      </div>
-    `;
-
-  }
-
-  let imageArea = "";
-
-  if(state.editImage){
-
-    const masks =
-      state.masks.map(
-        function(mask){
-
-          return `
-            <div
-              class="mask ${
-                state.selectedMask === mask.id
-                ? "selected"
-                : ""
-              }"
-              data-mask-id="${mask.id}"
-              style="
-                left:${mask.x}%;
-                top:${mask.y}%;
-                width:${mask.w}%;
-                height:${mask.h}%;
-              ">
-
-              ${
-                state.selectedMask === mask.id
-                ? `
-                  <div
-                    class="resize-handle">
-                  </div>
-                `
-                : ""
-              }
-
-            </div>
-          `;
-
-        }
-      ).join("");
-
-    imageArea = `
-      <div
-        class="editor"
-        id="editor">
-
-        <img
-          id="editor-image"
-          class="editor-image"
-          src="${state.editImage}"
-          alt="教科書画像">
-
-        ${masks}
-
-      </div>
-    `;
-
-  }else{
-
-    imageArea = `
-      <div class="card">
-
-        <button
-          class="blue"
-          id="pick-image">
-          📷 教科書の画像を追加
-        </button>
-
-        <input
-          id="image-input"
-          class="hidden"
-          type="file"
-          accept="image/*">
-
-      </div>
-    `;
-
-  }
-
-  const maskList =
-    state.masks.map(
-      function(mask,index){
-
-        return `
-          <div class="card row">
-
-            <span>
-              ${index + 1}個目の隠す場所
-            </span>
-
-            <span class="spacer"></span>
-
-            <button
-              class="textbtn danger delete-mask"
-              data-id="${mask.id}">
-              削除
-            </button>
-
-          </div>
-        `;
-
-      }
-    ).join("");
-
-  return `
-    <div class="app">
-
-      ${header(
-        "問題編集",
-        `
-          <button
-            class="blue"
-            id="save-problem">
-            保存
-          </button>
-        `
-      )}
-
-      <div class="small muted">
-
-        赤枠を指でドラッグすると移動できます。<br>
-        青い丸をドラッグすると大きさを変更できます。
-
-      </div>
-
-      <div class="section">
-
-        ${imageArea}
-
-      </div>
-
-      ${
-        state.editImage
-        ? `
-          <div class="section">
-
-            <div class="row">
-
-              <button
-                class="blue"
-                id="add-mask">
-                ＋ 隠す場所を追加
-              </button>
-
-              <span
-                class="small muted">
-
-                ${state.masks.length}個
-
-              </span>
-
-            </div>
-
-          </div>
-        `
-        : ""
-      }
-
-      ${maskList}
-
-      <div class="section">
-
-        <button
-          class="blue"
-          id="add-problem-from-edit">
-          ＋ 保存して次の問題を追加
-        </button>
-
-      </div>
-
-      <div class="section">
-
-        <button
-          class="textbtn danger"
-          id="delete-current-problem">
-          この問題を削除
-        </button>
-
-      </div>
-
-    </div>
-  `;
-
-}
-  /* =================================================
-   設定画面
-================================================= */
-
-function renderSettings(){
-
-  const test =
-    getTest();
-
-  if(!test){
-
-    return `
-      <div class="app">
-
-        ${header("設定")}
-
-        <p>
-          テストが見つかりません。
-        </p>
-
-      </div>
-    `;
-
-  }
-
-  return `
-    <div class="app">
-
-      ${header(
-        "設定",
-        `
-          <button
-            class="textbtn back-home">
-            ホーム
-          </button>
-        `
-      )}
-
-      <div class="section">
-
-        <label
-          class="small muted">
-          テスト名
-        </label>
-
-        <input
-          id="setting-name"
-          type="text"
-          value="${escapeHTML(test.name)}">
-
-      </div>
-
-      <div class="card row">
-
-        <input
-          id="fixed-test"
-          type="checkbox"
-          ${
-            db.fixedId === test.id
-            ? "checked"
-            : ""
-          }>
-
-        <label for="fixed-test">
-
-          このテストをトップに固定する
-
-        </label>
-
-      </div>
-
-      <div class="card">
-
-        <b>
-          問題数
-        </b>
-
-        <div class="muted small">
-
-          ${test.problems.length}問
-
-        </div>
-
-      </div>
-
-      <div class="section">
-
-        <button
-          class="textbtn danger"
-          id="delete-test">
-
-          ⚠️ このテストを削除
-
-        </button>
-
-      </div>
-
-    </div>
-  `;
-
-}
-
-/* =================================================
-   解答画面
-================================================= */
-
-function renderPlay(){
-
-  const test =
-    getTest();
-
-  if(
-    !test ||
-    test.problems.length === 0
-  ){
-
-    return `
-      <div class="app">
-
-        ${header(
-          "解答",
-          `
-            <button
-              class="textbtn quit">
-              ホーム
-            </button>
-          `
-        )}
-
-        <div class="card">
-
-          問題がありません。
-
-        </div>
-
-      </div>
-    `;
-
-  }
-
-  if(
-    state.answerIndex < 0
-  ){
-
-    state.answerIndex = 0;
-
-  }
-
-  if(
-    state.answerIndex >=
-    test.problems.length
-  ){
-
-    state.answerIndex =
-      test.problems.length - 1;
-
-  }
-
-  const problem =
-    test.problems[
-      state.answerIndex
-    ];
-
-  if(!problem.revealed){
-
-    problem.revealed = {};
-
-  }
-
-  const masks =
-    (problem.masks || [])
-      .map(
-        function(mask){
-
-          const revealed =
-            problem.revealed[
-              mask.id
-            ] === true;
-
-          return `
-            <div
-              class="answer-mask ${
-                revealed
-                ? "revealed"
-                : ""
-              }"
-              data-mask-id="${mask.id}"
-              style="
-                left:${mask.x}%;
-                top:${mask.y}%;
-                width:${mask.w}%;
-                height:${mask.h}%;
-              ">
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-
-  return `
-    <div class="app">
-
-      ${header(
-        `${state.answerIndex + 1} / ${test.problems.length}`,
-        `
-          <button
-            class="textbtn quit">
-            終了
-          </button>
-        `
-      )}
-
-      <div class="card">
-
-        <div class="test-name">
-
-          ${escapeHTML(test.name)}
-
-        </div>
-
-      </div>
-
-      <div class="answer">
-
-        <img
-          class="answer-image"
-          src="${problem.image}"
-          alt="問題">
-
-        ${masks}
-
-      </div>
-
-      <div class="bottom-bar">
-
-        <button
-          class="blue"
-          id="prev">
-
-          ← 前へ
-
-        </button>
-
-        <button
-          class="blue"
-          id="next">
-
-          ${
-            state.answerIndex ===
-            test.problems.length - 1
-            ? "終了"
-            : "次へ →"
-          }
-
-        </button>
-
-      </div>
-
-    </div>
-  `;
-
-}
-
-/* =================================================
-   画像読み込み
-================================================= */
-
-function readImage(file){
-
-  if(!file){
-
-    return;
-
-  }
-
-  if(
-    !file.type.startsWith(
-      "image/"
-    )
-  ){
-
-    showToast(
-      "画像ファイルを選択してください"
-    );
-
-    return;
-
-  }
-
-  const reader =
-    new FileReader();
-
-  reader.onload =
-    function(){
-
-      state.editImage =
-        reader.result;
-
-      render();
-
-    };
-
-  reader.onerror =
-    function(){
-
-      showToast(
-        "画像を読み込めませんでした"
-      );
-
-    };
-
-  reader.readAsDataURL(
-    file
-  );
-
-}
-
-/* =================================================
-   問題保存
-================================================= */
-
-function saveProblem(){
-
-  const problem =
-    getProblem();
-
-  if(!problem){
-
-    return;
-
-  }
-
-  if(!state.editImage){
-
-    showToast(
-      "画像を追加してください"
-    );
-
-    return;
-
-  }
-
-  problem.image =
-    state.editImage;
-
-  problem.masks =
-    state.masks.map(
-      function(mask){
-
-        return {
-
-          id:mask.id,
-
-          x:mask.x,
-
-          y:mask.y,
-
-          w:mask.w,
-
-          h:mask.h
-
-        };
-
-      }
-    );
-
-  problem.revealed = {};
-
-  saveDB();
-
-  go("create");
-
-}
-
-/* =================================================
-   赤枠追加
-================================================= */
-
-function addMask(){
-
-  if(!state.editImage){
-
-    showToast(
-      "先に画像を追加してください"
-    );
-
-    return;
-
-  }
-
-  const mask = {
-
-    id:uid(),
-
-    x:30,
-
-    y:30,
-
-    w:30,
-
-    h:15
-
-  };
-
-  state.masks.push(
-    mask
-  );
-
-  state.selectedMask =
-    mask.id;
-
-  render();
-
-}
-
-/* =================================================
-   赤枠操作
-================================================= */
-
-function setupMaskControls(){
-
-  const editor =
-    $("editor");
-
-  if(!editor){
-
-    return;
-
-  }
-
-  const masks =
-    editor.querySelectorAll(
-      ".mask"
-    );
-
-  masks.forEach(
-    function(element){
-
-      const id =
-        element.dataset.maskId;
-
-      const mask =
-        state.masks.find(
-          function(item){
-
-            return item.id === id;
-
-          }
-        );
-
-      if(!mask){
-
-        return;
-
-      }
-
-      /* =========================
-         赤枠移動
-      ========================= */
-
-      element.addEventListener(
-        "pointerdown",
-        function(event){
-
-          if(
-            event.target.classList.contains(
-              "resize-handle"
-            )
-          ){
-
-            return;
-
-          }
-
-          event.preventDefault();
-
-          event.stopPropagation();
-
-          state.selectedMask =
-            id;
-
-          const rect =
-            editor.getBoundingClientRect();
-
-          const startX =
-            event.clientX;
-
-          const startY =
-            event.clientY;
-
-          const startLeft =
-            mask.x;
-
-          const startTop =
-            mask.y;
-
-          element.setPointerCapture(
-            event.pointerId
-          );
-
-          function move(ev){
-
-            const dx =
-              (
-                ev.clientX -
-                startX
-              ) /
-              rect.width *
-              100;
-
-            const dy =
-              (
-                ev.clientY -
-                startY
-              ) /
-              rect.height *
-              100;
-
-            mask.x =
-              Math.max(
-                0,
-                Math.min(
-                  100 - mask.w,
-                  startLeft + dx
-                )
-              );
-
-            mask.y =
-              Math.max(
-                0,
-                Math.min(
-                  100 - mask.h,
-                  startTop + dy
-                )
-              );
-
-            element.style.left =
-              mask.x + "%";
-
-            element.style.top =
-              mask.y + "%";
-
-          }
-
-          function end(){
-
-            try{
-
-              element.releasePointerCapture(
-                event.pointerId
-              );
-
-            }catch(error){}
-
-            element.removeEventListener(
-              "pointermove",
-              move
-            );
-
-            element.removeEventListener(
-              "pointerup",
-              end
-            );
-
-          }
-
-          element.addEventListener(
-            "pointermove",
-            move
-          );
-
-          element.addEventListener(
-            "pointerup",
-            end
-          );
-
-        }
-      );
-
-      /* =========================
-         サイズ変更
-      ========================= */
-
-      const handle =
-        element.querySelector(
-          ".resize-handle"
-        );
-
-      if(!handle){
-
-        return;
-
-      }
-
-      handle.addEventListener(
-        "pointerdown",
-        function(event){
-
-          event.preventDefault();
-
-          event.stopPropagation();
-
-          const rect =
-            editor.getBoundingClientRect();
-
-          const startX =
-            event.clientX;
-
-          const startY =
-            event.clientY;
-
-          const startW =
-            mask.w;
-
-          const startH =
-            mask.h;
-
-          handle.setPointerCapture(
-            event.pointerId
-          );
-
-          function resize(ev){
-
-            const dx =
-              (
-                ev.clientX -
-                startX
-              ) /
-              rect.width *
-              100;
-
-            const dy =
-              (
-                ev.clientY -
-                startY
-              ) /
-              rect.height *
-              100;
-
-            mask.w =
-              Math.max(
-                0.5,
-                Math.min(
-                  100 - mask.x,
-                  startW + dx
-                )
-              );
-
-            mask.h =
-              Math.max(
-                0.5,
-                Math.min(
-                  100 - mask.y,
-                  startH + dy
-                )
-              );
-
-            element.style.width =
-              mask.w + "%";
-
-            element.style.height =
-              mask.h + "%";
-
-          }
-
-          function end(){
-
-            try{
-
-              handle.releasePointerCapture(
-                event.pointerId
-              );
-
-            }catch(error){}
-
-            handle.removeEventListener(
-              "pointermove",
-              resize
-            );
-
-            handle.removeEventListener(
-              "pointerup",
-              end
-            );
-
-          }
-
-          handle.addEventListener(
-            "pointermove",
-            resize
-          );
-
-          handle.addEventListener(
-            "pointerup",
-            end
-          );
-
-        }
-      );
-
-    }
-  );
-
-            }
-  /* =================================================
-   問題の並び替え
-   スマホ専用：長押し → 指で上下に移動
-================================================= */
-
-function enableSorting(){
-
-  const list =
-    $("problem-list");
-
-  if(!list){
-
-    return;
-
-  }
-
-  const rows =
-    [...list.querySelectorAll(
-      ".problem-row"
-    )];
-
-  let activeRow =
-    null;
-
-  let longPressTimer =
-    null;
-
-  let isDragging =
-    false;
-
-  let startY =
-    0;
-
-  rows.forEach(
-    function(row){
-
-      row.addEventListener(
-        "pointerdown",
-        function(event){
-
-          if(
-            event.target.closest(
-              "button"
-            )
-          ){
-
-            return;
-
-          }
-
-          startY =
-            event.clientY;
-
-          activeRow =
-            row;
-
-          isDragging =
-            false;
-
-          longPressTimer =
-            setTimeout(
-              function(){
-
-                isDragging =
-                  true;
-
-                row.classList.add(
-                  "dragging"
-                );
-
-                if(
-                  navigator.vibrate
-                ){
-
-                  navigator.vibrate(
-                    40
-                  );
-
-                }
-
-              },
-              350
-            );
-
-          row.setPointerCapture(
-            event.pointerId
-          );
-
-        }
-      );
-
-      row.addEventListener(
-        "pointermove",
-        function(event){
-
-          if(
-            !activeRow ||
-            activeRow !== row
-          ){
-
-            return;
-
-          }
-
-          if(!isDragging){
-
-            const distance =
-              Math.abs(
-                event.clientY -
-                startY
-              );
-
-            if(distance > 8){
-
-              clearTimeout(
-                longPressTimer
-              );
-
-              activeRow =
-                null;
-
-            }
-
-            return;
-
-          }
-
-          event.preventDefault();
-
-          const otherRows =
-            [
-              ...list.querySelectorAll(
-                ".problem-row"
-              )
-            ].filter(
-              function(item){
-
-                return item !== row;
-
-              }
-            );
-
-          let target =
-            null;
-
-          let closest =
-            Infinity;
-
-          otherRows.forEach(
-            function(other){
-
-              const rect =
-                other.getBoundingClientRect();
-
-              const center =
-                rect.top +
-                rect.height / 2;
-
-              const distance =
-                Math.abs(
-                  event.clientY -
-                  center
-                );
-
-              if(
-                distance <
-                closest
-              ){
-
-                closest =
-                  distance;
-
-                target =
-                  other;
-
-              }
-
-            }
-          );
-
-          if(!target){
-
-            return;
-
-          }
-
-          const targetRect =
-            target.getBoundingClientRect();
-
-          const targetCenter =
-            targetRect.top +
-            targetRect.height / 2;
-
-          if(
-            event.clientY <
-            targetCenter
-          ){
-
-            list.insertBefore(
-              row,
-              target
-            );
-
-          }else{
-
-            list.insertBefore(
-              row,
-              target.nextSibling
-            );
-
-          }
-
-        }
-      );
-
-      row.addEventListener(
-        "pointerup",
-        function(){
-
-          clearTimeout(
-            longPressTimer
-          );
-
-          if(
-            isDragging
-          ){
-
-            saveProblemOrder();
-
-          }
-
-          row.classList.remove(
-            "dragging"
-          );
-
-          activeRow =
-            null;
-
-          isDragging =
-            false;
-
-        }
-      );
-
-      row.addEventListener(
-        "pointercancel",
-        function(){
-
-          clearTimeout(
-            longPressTimer
-          );
-
-          row.classList.remove(
-            "dragging"
-          );
-
-          activeRow =
-            null;
-
-          isDragging =
-            false;
-
-        }
-      );
-
-    }
-  );
-
-}
-
-function saveProblemOrder(){
-
-  const test =
-    getTest();
-
-  const list =
-    $("problem-list");
-
-  if(
-    !test ||
-    !list
-  ){
-
-    return;
-
-  }
-
-  const ids =
-    [
-      ...list.querySelectorAll(
-        ".problem-row"
-      )
-    ].map(
-      function(row){
-
-        return row.dataset.problemId;
-
-      }
-    );
-
-  const newProblems =
-    [];
-
-  ids.forEach(
-    function(id){
-
-      const problem =
-        test.problems.find(
-          function(item){
-
-            return item.id === id;
-
-          }
-        );
-
-      if(problem){
-
-        newProblems.push(
-          problem
-        );
-
-      }
-
-    }
-  );
-
-  test.problems =
-    newProblems;
-
-  saveDB();
-
-  showToast(
-    "並び順を保存しました"
-  );
 
 }
 
@@ -2202,7 +1060,9 @@ function deleteProblem(id){
     test.problems.filter(
       function(problem){
 
-        return problem.id !== id;
+        return (
+          problem.id !== id
+        );
 
       }
     );
@@ -2228,117 +1088,6 @@ function deleteProblem(id){
   saveDB();
 
   render();
-
-}
-
-/* =================================================
-   現在の問題を削除
-================================================= */
-
-function deleteCurrentProblem(){
-
-  if(!state.problemId){
-
-    return;
-
-  }
-
-  const id =
-    state.problemId;
-
-  const test =
-    getTest();
-
-  if(!test){
-
-    return;
-
-  }
-
-  if(
-    !confirm(
-      "この問題を削除しますか？"
-    )
-  ){
-
-    return;
-
-  }
-
-  test.problems =
-    test.problems.filter(
-      function(problem){
-
-        return problem.id !== id;
-
-      }
-    );
-
-  state.problemId =
-    null;
-
-  state.editImage =
-    null;
-
-  state.masks =
-    [];
-
-  state.selectedMask =
-    null;
-
-  saveDB();
-
-  go("create");
-
-}
-
-/* =================================================
-   次の問題を作成
-================================================= */
-
-function addProblemFromEdit(){
-
-  const problem =
-    getProblem();
-
-  if(problem){
-
-    if(state.editImage){
-
-      problem.image =
-        state.editImage;
-
-      problem.masks =
-        state.masks.map(
-          function(mask){
-
-            return {
-
-              id:mask.id,
-
-              x:mask.x,
-
-              y:mask.y,
-
-              w:mask.w,
-
-              h:mask.h
-
-            };
-
-          }
-        );
-
-      problem.revealed =
-        {};
-
-    }
-
-    saveDB();
-
-  }
-
-  addProblem();
 
 }
 
@@ -2371,13 +1120,16 @@ function deleteTest(){
     db.tests.filter(
       function(item){
 
-        return item.id !== test.id;
+        return (
+          item.id !== test.id
+        );
 
       }
     );
 
   if(
-    db.fixedId === test.id
+    db.fixedId ===
+    test.id
   ){
 
     db.fixedId =
@@ -2391,21 +1143,2034 @@ function deleteTest(){
   state.problemId =
     null;
 
+  state.editImage =
+    null;
+
+  state.masks =
+    [];
+
+  state.selectedMask =
+    null;
+
   saveDB();
 
   go("home");
 
 }
+  /* =================================================
+   共通ヘッダー
+================================================= */
+
+function header(title, rightHTML = ""){
+
+  return `
+    <header class="header">
+
+      <h1>
+        ${escapeHTML(title)}
+      </h1>
+
+      <div>
+        ${rightHTML}
+      </div>
+
+    </header>
+  `;
+
+}
 
 /* =================================================
-   イベント処理
+   ホーム画面
+================================================= */
+
+function renderHome(){
+
+  let html = "";
+
+  if(db.tests.length === 0){
+
+    html = `
+      <div class="card muted">
+
+        まだテストがありません。<br>
+        「＋ テスト作成」から作成してください。
+
+      </div>
+    `;
+
+  }else{
+
+    html =
+      db.tests.map(
+        function(test){
+
+          const isFixed =
+            db.fixedId === test.id;
+
+          return `
+            <div class="card test-card">
+
+              <div class="test-title">
+
+                ${escapeHTML(
+                  test.name
+                )}
+
+                ${
+                  isFixed
+                  ? `
+                    <span class="fixed-badge">
+                      固定中
+                    </span>
+                  `
+                  : ""
+                }
+
+              </div>
+
+              <div
+                class="small muted"
+                style="margin-bottom:12px">
+
+                ${test.problems.length}問
+
+              </div>
+
+              <div class="row">
+
+                <button
+                  class="blue play-test"
+                  data-id="${test.id}">
+
+                  解答する
+
+                </button>
+
+                <button
+                  class="textbtn settings-test"
+                  data-id="${test.id}">
+
+                  設定
+
+                </button>
+
+              </div>
+
+            </div>
+          `;
+
+        }
+      ).join("");
+
+  }
+
+  return `
+
+    <div class="app">
+
+      ${header(
+        "テスト前対策アプリ",
+        `
+          <button
+            class="primary"
+            id="new-test">
+
+            ＋ テスト作成
+
+          </button>
+        `
+      )}
+
+      ${html}
+
+    </div>
+
+  `;
+
+}
+
+/* =================================================
+   問題一覧を作る
+================================================= */
+
+function problemListHTML(test){
+
+  if(
+    !test ||
+    test.problems.length === 0
+  ){
+
+    return `
+      <div class="card muted">
+
+        まだ問題がありません。
+
+      </div>
+    `;
+
+  }
+
+  return test.problems
+    .map(
+      function(problem,index){
+
+        return `
+
+          <div
+            class="problem-row"
+            data-problem-id="${problem.id}">
+
+            <!--
+              ここだけ長押しして
+              並び替える
+            -->
+
+            <div
+              class="sort-handle"
+              data-sort-id="${problem.id}">
+
+              ☰
+
+            </div>
+
+            <div class="problem-number">
+
+              ${index + 1}問目
+
+            </div>
+
+            <div class="spacer">
+
+              <div class="problem-status">
+
+                ${
+                  problem.image
+                  ? "画像あり"
+                  : "画像未設定"
+                }
+
+              </div>
+
+            </div>
+
+            <div class="problem-actions">
+
+              <button
+                class="textbtn edit-problem"
+                data-id="${problem.id}">
+
+                編集
+
+              </button>
+
+              <button
+                class="textbtn danger delete-problem"
+                data-id="${problem.id}">
+
+                削除
+
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }
+    )
+    .join("");
+
+}
+
+/* =================================================
+   テスト作成画面
+================================================= */
+
+function renderCreate(){
+
+  const test =
+    getTest();
+
+  if(!test){
+
+    return `
+      <div class="app">
+
+        ${header(
+          "テスト作成"
+        )}
+
+        <div class="card">
+
+          テストが見つかりません。
+
+        </div>
+
+        <button
+          class="blue"
+          id="back-home">
+
+          ホームへ戻る
+
+        </button>
+
+      </div>
+    `;
+
+  }
+
+  return `
+
+    <div class="app">
+
+      ${header(
+        "テスト作成",
+        `
+          <button
+            class="blue"
+            id="add-problem">
+
+            ＋ 問題追加
+
+          </button>
+        `
+      )}
+
+      <div class="section">
+
+        <label class="small muted">
+
+          テスト名
+
+        </label>
+
+        <input
+          id="test-name"
+          type="text"
+          value="${escapeHTML(
+            test.name
+          )}"
+        >
+
+      </div>
+
+      <div class="section">
+
+        <div class="small muted">
+
+          問題一覧
+
+        </div>
+
+        <div id="problem-list">
+
+          ${problemListHTML(
+            test
+          )}
+
+        </div>
+
+      </div>
+
+      <div class="section">
+
+        <button
+          class="blue"
+          id="save-create">
+
+          保存してホームへ
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+/* =================================================
+   設定画面
+================================================= */
+
+function renderSettings(){
+
+  const test =
+    getTest();
+
+  if(!test){
+
+    return `
+      <div class="app">
+
+        ${header(
+          "テスト設定"
+        )}
+
+        <div class="card">
+
+          テストが見つかりません。
+
+        </div>
+
+        <button
+          class="blue"
+          id="back-home">
+
+          ホームへ戻る
+
+        </button>
+
+      </div>
+    `;
+
+  }
+
+  return `
+
+    <div class="app">
+
+      ${header(
+        "テスト設定",
+        `
+          <button
+            class="textbtn"
+            id="settings-home">
+
+            ホーム
+
+          </button>
+        `
+      )}
+
+      <div class="section">
+
+        <label class="small muted">
+
+          テスト名
+
+        </label>
+
+        <input
+          id="setting-name"
+          type="text"
+          value="${escapeHTML(
+            test.name
+          )}"
+        >
+
+      </div>
+
+      <!--
+        固定設定
+      -->
+
+      <div class="card">
+
+        <label
+          class="row"
+          style="gap:12px">
+
+          <input
+            id="fixed-test"
+            type="checkbox"
+            ${
+              db.fixedId === test.id
+              ? "checked"
+              : ""
+            }
+          >
+
+          <span>
+
+            このテストをトップに固定
+
+          </span>
+
+        </label>
+
+        <div
+          class="small muted"
+          style="margin-top:8px">
+
+          固定すると、次回サイトを開いたとき
+          このテストが自動的に始まります。
+
+        </div>
+
+      </div>
+
+      <!--
+        問題管理
+      -->
+
+      <div class="section">
+
+        <div class="row">
+
+          <h2
+            style="
+              margin:0;
+              font-size:18px;
+            ">
+
+            問題
+
+          </h2>
+
+          <div class="spacer"></div>
+
+          <button
+            class="blue"
+            id="settings-add-problem">
+
+            ＋ 問題追加
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <div id="settings-problem-list">
+
+        ${problemListHTML(
+          test
+        )}
+
+      </div>
+
+      <!--
+        削除
+      -->
+
+      <div class="section">
+
+        <button
+          class="textbtn danger"
+          id="delete-test">
+
+          ⚠️ このテストを削除
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+  /* =================================================
+   問題編集画面
+================================================= */
+
+function renderEdit(){
+
+  const problem =
+    getProblem();
+
+  if(!problem){
+
+    return `
+      <div class="app">
+
+        ${header(
+          "問題編集"
+        )}
+
+        <div class="card">
+
+          問題が見つかりません。
+
+        </div>
+
+        <button
+          class="blue"
+          id="edit-back">
+
+          戻る
+
+        </button>
+
+      </div>
+    `;
+
+  }
+
+  let imageHTML = "";
+
+  if(state.editImage){
+
+    const masks =
+      state.masks.map(
+        function(mask){
+
+          return `
+            <div
+              class="mask ${
+                state.selectedMask === mask.id
+                ? "selected"
+                : ""
+              }"
+              data-mask-id="${mask.id}"
+              style="
+                left:${mask.x}%;
+                top:${mask.y}%;
+                width:${mask.w}%;
+                height:${mask.h}%;
+              "
+            >
+
+              ${
+                state.selectedMask === mask.id
+                ? `
+                  <div
+                    class="resize-handle"
+                    data-resize-id="${mask.id}">
+                  </div>
+                `
+                : ""
+              }
+
+            </div>
+          `;
+
+        }
+      ).join("");
+
+    imageHTML = `
+
+      <div
+        class="editor"
+        id="editor">
+
+        <img
+          id="editor-image"
+          class="editor-image"
+          src="${state.editImage}"
+          alt="教科書画像"
+        >
+
+        ${masks}
+
+      </div>
+
+    `;
+
+  }else{
+
+    imageHTML = `
+
+      <div class="card">
+
+        <div
+          class="muted"
+          style="margin-bottom:12px">
+
+          教科書のページを撮影して、
+          隠したい部分を赤枠で囲みます。
+
+        </div>
+
+        <button
+          class="blue"
+          id="pick-image">
+
+          📷 画像を追加
+
+        </button>
+
+        <input
+          id="image-input"
+          class="hidden"
+          type="file"
+          accept="image/*"
+        >
+
+      </div>
+
+    `;
+
+  }
+
+  let maskList = "";
+
+  if(
+    state.masks.length > 0
+  ){
+
+    maskList =
+      state.masks.map(
+        function(mask,index){
+
+          return `
+
+            <div
+              class="card row"
+              style="
+                padding:10px 12px;
+              "
+            >
+
+              <span>
+
+                ${index + 1}個目
+
+              </span>
+
+              <span class="spacer"></span>
+
+              <button
+                class="textbtn"
+                data-select-mask="${mask.id}">
+
+                選択
+
+              </button>
+
+              <button
+                class="textbtn danger"
+                data-delete-mask="${mask.id}">
+
+                削除
+
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      ).join("");
+
+  }
+
+  return `
+
+    <div class="app">
+
+      ${header(
+        "問題編集",
+        `
+          <button
+            class="blue"
+            id="save-problem">
+
+            保存
+
+          </button>
+        `
+      )}
+
+      <div
+        class="small muted"
+        style="
+          line-height:1.7;
+          margin-bottom:12px;
+        "
+      >
+
+        ${
+          state.editImage
+          ? `
+            赤枠を指で動かせます。<br>
+            選択した赤枠の青い丸を
+            動かすとサイズを変更できます。
+          `
+          : `
+            まず画像を追加してください。
+          `
+        }
+
+      </div>
+
+      ${imageHTML}
+
+      ${
+        state.editImage
+        ? `
+
+          <div class="section">
+
+            <button
+              class="blue"
+              id="add-mask">
+
+              ＋ 隠す場所を追加
+
+            </button>
+
+          </div>
+
+          ${maskList}
+
+        `
+        : ""
+      }
+
+      <div class="section">
+
+        <button
+          class="blue"
+          id="save-and-add">
+
+          保存して次の問題を追加
+
+        </button>
+
+      </div>
+
+      <div class="section">
+
+        <button
+          class="textbtn"
+          id="edit-back">
+
+          問題一覧へ戻る
+
+        </button>
+
+      </div>
+
+      <div class="section">
+
+        <button
+          class="textbtn danger"
+          id="delete-current">
+
+          この問題を削除
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+/* =================================================
+   画像読み込み
+================================================= */
+
+function readImage(file){
+
+  if(!file){
+
+    return;
+
+  }
+
+  if(
+    !file.type ||
+    !file.type.startsWith(
+      "image/"
+    )
+  ){
+
+    showToast(
+      "画像ファイルを選択してください"
+    );
+
+    return;
+
+  }
+
+  const reader =
+    new FileReader();
+
+  reader.onload =
+    function(){
+
+      state.editImage =
+        reader.result;
+
+      state.masks =
+        [];
+
+      state.selectedMask =
+        null;
+
+      render();
+
+    };
+
+  reader.onerror =
+    function(){
+
+      showToast(
+        "画像を読み込めませんでした"
+      );
+
+    };
+
+  reader.readAsDataURL(
+    file
+  );
+
+}
+
+/* =================================================
+   赤枠追加
+================================================= */
+
+function addMask(){
+
+  if(!state.editImage){
+
+    showToast(
+      "先に画像を追加してください"
+    );
+
+    return;
+
+  }
+
+  const mask = {
+
+    id:uid(),
+
+    /*
+      初期位置
+    */
+
+    x:20,
+
+    y:20,
+
+    /*
+      かなり小さめ。
+      必要ならあとから拡大できる。
+    */
+
+    w:30,
+
+    h:12
+
+  };
+
+  state.masks.push(
+    mask
+  );
+
+  state.selectedMask =
+    mask.id;
+
+  render();
+
+}
+
+/* =================================================
+   赤枠削除
+================================================= */
+
+function deleteMask(id){
+
+  state.masks =
+    state.masks.filter(
+      function(mask){
+
+        return (
+          mask.id !== id
+        );
+
+      }
+    );
+
+  if(
+    state.selectedMask === id
+  ){
+
+    state.selectedMask =
+      null;
+
+  }
+
+  render();
+
+}
+
+/* =================================================
+   赤枠選択
+================================================= */
+
+function selectMask(id){
+
+  const exists =
+    state.masks.some(
+      function(mask){
+
+        return (
+          mask.id === id
+        );
+
+      }
+    );
+
+  if(!exists){
+
+    return;
+
+  }
+
+  state.selectedMask =
+    id;
+
+  render();
+
+}
+
+/* =================================================
+   赤枠の移動・サイズ変更
+================================================= */
+
+function setupMaskControls(){
+
+  const editor =
+    $("editor");
+
+  if(!editor){
+
+    return;
+
+  }
+
+  const maskElements =
+    editor.querySelectorAll(
+      ".mask"
+    );
+
+  maskElements.forEach(
+    function(element){
+
+      const id =
+        element.dataset.maskId;
+
+      const mask =
+        state.masks.find(
+          function(item){
+
+            return (
+              item.id === id
+            );
+
+          }
+        );
+
+      if(!mask){
+
+        return;
+
+      }
+
+      /*
+        赤枠をタップしたら選択
+      */
+
+      element.addEventListener(
+        "pointerdown",
+        function(event){
+
+          if(
+            event.target.closest(
+              ".resize-handle"
+            )
+          ){
+
+            return;
+
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          state.selectedMask =
+            id;
+
+          const rect =
+            editor.getBoundingClientRect();
+
+          const startX =
+            event.clientX;
+
+          const startY =
+            event.clientY;
+
+          const originalX =
+            mask.x;
+
+          const originalY =
+            mask.y;
+
+          function move(ev){
+
+            const dx =
+              (
+                ev.clientX -
+                startX
+              ) /
+              rect.width *
+              100;
+
+            const dy =
+              (
+                ev.clientY -
+                startY
+              ) /
+              rect.height *
+              100;
+
+            mask.x =
+              Math.max(
+                0,
+                Math.min(
+                  100 - mask.w,
+                  originalX + dx
+                )
+              );
+
+            mask.y =
+              Math.max(
+                0,
+                Math.min(
+                  100 - mask.h,
+                  originalY + dy
+                )
+              );
+
+            element.style.left =
+              mask.x + "%";
+
+            element.style.top =
+              mask.y + "%";
+
+          }
+
+          function end(){
+
+            element.removeEventListener(
+              "pointermove",
+              move
+            );
+
+            element.removeEventListener(
+              "pointerup",
+              end
+            );
+
+            element.removeEventListener(
+              "pointercancel",
+              end
+            );
+
+          }
+
+          element.addEventListener(
+            "pointermove",
+            move
+          );
+
+          element.addEventListener(
+            "pointerup",
+            end
+          );
+
+          element.addEventListener(
+            "pointercancel",
+            end
+          );
+
+        }
+      );
+
+      /*
+        サイズ変更
+      */
+
+      const handle =
+        element.querySelector(
+          ".resize-handle"
+        );
+
+      if(!handle){
+
+        return;
+
+      }
+
+      handle.addEventListener(
+        "pointerdown",
+        function(event){
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const rect =
+            editor.getBoundingClientRect();
+
+          const startX =
+            event.clientX;
+
+          const startY =
+            event.clientY;
+
+          const originalW =
+            mask.w;
+
+          const originalH =
+            mask.h;
+
+          function resize(ev){
+
+            const dx =
+              (
+                ev.clientX -
+                startX
+              ) /
+              rect.width *
+              100;
+
+            const dy =
+              (
+                ev.clientY -
+                startY
+              ) /
+              rect.height *
+              100;
+
+            mask.w =
+              Math.max(
+                0.1,
+                Math.min(
+                  100 - mask.x,
+                  originalW + dx
+                )
+              );
+
+            mask.h =
+              Math.max(
+                0.1,
+                Math.min(
+                  100 - mask.y,
+                  originalH + dy
+                )
+              );
+
+            element.style.width =
+              mask.w + "%";
+
+            element.style.height =
+              mask.h + "%";
+
+          }
+
+          function end(){
+
+            handle.removeEventListener(
+              "pointermove",
+              resize
+            );
+
+            handle.removeEventListener(
+              "pointerup",
+              end
+            );
+
+            handle.removeEventListener(
+              "pointercancel",
+              end
+            );
+
+          }
+
+          handle.addEventListener(
+            "pointermove",
+            resize
+          );
+
+          handle.addEventListener(
+            "pointerup",
+            end
+          );
+
+          handle.addEventListener(
+            "pointercancel",
+            end
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+  /* =================================================
+   問題保存
+================================================= */
+
+function saveProblem(){
+
+  const test =
+    getTest();
+
+  const problem =
+    getProblem();
+
+  if(!test || !problem){
+
+    showToast(
+      "問題が見つかりません"
+    );
+
+    return;
+
+  }
+
+  if(!state.editImage){
+
+    showToast(
+      "画像を追加してください"
+    );
+
+    return;
+
+  }
+
+  problem.image =
+    state.editImage;
+
+  problem.masks =
+    JSON.parse(
+      JSON.stringify(
+        state.masks
+      )
+    );
+
+  problem.revealed = {};
+
+  saveDB();
+
+  showToast(
+    "保存しました"
+  );
+
+}
+
+/* =================================================
+   保存して次の問題
+================================================= */
+
+function saveAndAddProblem(){
+
+  const test =
+    getTest();
+
+  const problem =
+    getProblem();
+
+  if(!test || !problem){
+
+    return;
+
+  }
+
+  if(!state.editImage){
+
+    showToast(
+      "画像を追加してください"
+    );
+
+    return;
+
+  }
+
+  problem.image =
+    state.editImage;
+
+  problem.masks =
+    JSON.parse(
+      JSON.stringify(
+        state.masks
+      )
+    );
+
+  problem.revealed = {};
+
+  saveDB();
+
+  /*
+    新しい問題を追加
+  */
+
+  const newProblem = {
+
+    id:uid(),
+
+    image:"",
+
+    masks:[],
+
+    revealed:{}
+
+  };
+
+  test.problems.push(
+    newProblem
+  );
+
+  state.problemId =
+    newProblem.id;
+
+  state.editImage =
+    null;
+
+  state.masks =
+    [];
+
+  state.selectedMask =
+    null;
+
+  saveDB();
+
+  render();
+
+}
+
+/* =================================================
+   現在の問題を削除
+================================================= */
+
+function deleteCurrent(){
+
+  const problem =
+    getProblem();
+
+  if(!problem){
+
+    return;
+
+  }
+
+  deleteProblem(
+    problem.id
+  );
+
+}
+
+/* =================================================
+   解答画面
+================================================= */
+
+function renderPlay(){
+
+  const test =
+    getTest();
+
+  if(
+    !test ||
+    test.problems.length === 0
+  ){
+
+    return `
+
+      <div class="app">
+
+        ${header(
+          "解答"
+        )}
+
+        <div class="card">
+
+          このテストには
+          問題がありません。
+
+        </div>
+
+        <button
+          class="blue"
+          id="play-home">
+
+          ホームへ戻る
+
+        </button>
+
+      </div>
+
+    `;
+
+  }
+
+  /*
+    範囲外防止
+  */
+
+  if(
+    state.answerIndex < 0
+  ){
+
+    state.answerIndex =
+      0;
+
+  }
+
+  if(
+    state.answerIndex >=
+    test.problems.length
+  ){
+
+    state.answerIndex =
+      test.problems.length - 1;
+
+  }
+
+  const problem =
+    test.problems[
+      state.answerIndex
+    ];
+
+  if(
+    !problem.revealed ||
+    typeof problem.revealed !==
+    "object"
+  ){
+
+    problem.revealed = {};
+
+  }
+
+  const masks =
+    (problem.masks || [])
+      .map(
+        function(mask){
+
+          const revealed =
+            problem.revealed[
+              mask.id
+            ] === true;
+
+          return `
+
+            <div
+              class="answer-mask ${
+                revealed
+                ? "revealed"
+                : ""
+              }"
+              data-mask-id="${mask.id}"
+              style="
+                left:${mask.x}%;
+                top:${mask.y}%;
+                width:${mask.w}%;
+                height:${mask.h}%;
+              "
+            ></div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+  return `
+
+    <div class="app">
+
+      ${header(
+        `${state.answerIndex + 1} / ${test.problems.length}`,
+        `
+          <button
+            class="textbtn"
+            id="play-home">
+
+            終了
+
+          </button>
+        `
+      )}
+
+      <div
+        class="small muted"
+        style="
+          margin-bottom:10px;
+        "
+      >
+
+        ${escapeHTML(
+          test.name
+        )}
+
+      </div>
+
+      ${
+        problem.image
+        ? `
+
+          <div class="answer">
+
+            <img
+              class="answer-image"
+              src="${problem.image}"
+              alt="問題"
+            >
+
+            ${masks}
+
+          </div>
+
+        `
+        : `
+
+          <div class="card">
+
+            この問題には
+            画像がありません。
+
+          </div>
+
+        `
+      }
+
+      <div class="bottom-bar">
+
+        <button
+          class="blue"
+          id="answer-prev"
+          ${
+            state.answerIndex === 0
+            ? "disabled"
+            : ""
+          }>
+
+          ← 前へ
+
+        </button>
+
+        <button
+          class="blue"
+          id="answer-next">
+
+          ${
+            state.answerIndex ===
+            test.problems.length - 1
+            ? "終了"
+            : "次へ →"
+          }
+
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+/* =================================================
+   解答開始
+================================================= */
+
+function startTest(id){
+
+  const test =
+    db.tests.find(
+      function(item){
+
+        return (
+          item.id === id
+        );
+
+      }
+    );
+
+  if(!test){
+
+    showToast(
+      "テストが見つかりません"
+    );
+
+    return;
+
+  }
+
+  if(
+    test.problems.length === 0
+  ){
+
+    showToast(
+      "このテストには問題がありません"
+    );
+
+    return;
+
+  }
+
+  state.testId =
+    test.id;
+
+  state.answerIndex =
+    0;
+
+  /*
+    前回の表示状態をリセット
+  */
+
+  test.problems.forEach(
+    function(problem){
+
+      problem.revealed = {};
+
+    }
+  );
+
+  saveDB();
+
+  go("play");
+
+}
+
+/* =================================================
+   並び替え
+   スマホ：☰を長押し
+================================================= */
+
+function setupSorting(){
+
+  const list =
+    $("problem-list");
+
+  const settingsList =
+    $("settings-problem-list");
+
+  /*
+    作成画面・設定画面の
+    どちらでも使える
+  */
+
+  [
+    list,
+    settingsList
+  ].forEach(
+    function(container){
+
+      if(!container){
+
+        return;
+
+      }
+
+      const rows =
+        container.querySelectorAll(
+          ".problem-row"
+        );
+
+      rows.forEach(
+        function(row){
+
+          const handle =
+            row.querySelector(
+              ".sort-handle"
+            );
+
+          if(!handle){
+
+            return;
+
+          }
+
+          let timer =
+            null;
+
+          let dragging =
+            false;
+
+          let pointerId =
+            null;
+
+          /*
+            長押し開始
+          */
+
+          handle.addEventListener(
+            "pointerdown",
+            function(event){
+
+              event.preventDefault();
+
+              pointerId =
+                event.pointerId;
+
+              try{
+
+                handle.setPointerCapture(
+                  pointerId
+                );
+
+              }catch(error){}
+
+              timer =
+                setTimeout(
+                  function(){
+
+                    dragging =
+                      true;
+
+                    row.classList.add(
+                      "dragging"
+                    );
+
+                    if(
+                      navigator.vibrate
+                    ){
+
+                      navigator.vibrate(
+                        40
+                      );
+
+                    }
+
+                  },
+                  350
+                );
+
+            }
+          );
+
+          /*
+            指を動かす
+          */
+
+          handle.addEventListener(
+            "pointermove",
+            function(event){
+
+              if(!dragging){
+
+                return;
+
+              }
+
+              event.preventDefault();
+
+              const allRows =
+                [
+                  ...container.querySelectorAll(
+                    ".problem-row"
+                  )
+                ].filter(
+                  function(item){
+
+                    return item !== row;
+
+                  }
+                );
+
+              let target =
+                null;
+
+              for(
+                const other
+                of allRows
+              ){
+
+                const rect =
+                  other.getBoundingClientRect();
+
+                const center =
+                  rect.top +
+                  rect.height / 2;
+
+                if(
+                  event.clientY <
+                  center
+                ){
+
+                  target =
+                    other;
+
+                  break;
+
+                }
+
+              }
+
+              if(target){
+
+                container.insertBefore(
+                  row,
+                  target
+                );
+
+              }else if(
+                allRows.length > 0
+              ){
+
+                container.appendChild(
+                  row
+                );
+
+              }
+
+            }
+          );
+
+          /*
+            指を離す
+          */
+
+          function finish(){
+
+            clearTimeout(
+              timer
+            );
+
+            if(dragging){
+
+              row.classList.remove(
+                "dragging"
+              );
+
+              saveOrderFromContainer(
+                container
+              );
+
+            }
+
+            dragging =
+              false;
+
+            pointerId =
+              null;
+
+          }
+
+          handle.addEventListener(
+            "pointerup",
+            finish
+          );
+
+          handle.addEventListener(
+            "pointercancel",
+            finish
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+
+/* =================================================
+   並び順保存
+================================================= */
+
+function saveOrderFromContainer(
+  container
+){
+
+  const test =
+    getTest();
+
+  if(!test){
+
+    return;
+
+  }
+
+  const ids =
+    [
+      ...container.querySelectorAll(
+        ".problem-row"
+      )
+    ].map(
+      function(row){
+
+        return row.dataset.problemId;
+
+      }
+    );
+
+  const map =
+    new Map(
+      test.problems.map(
+        function(problem){
+
+          return [
+            problem.id,
+            problem
+          ];
+
+        }
+      )
+    );
+
+  const newProblems =
+    [];
+
+  ids.forEach(
+    function(id){
+
+      if(map.has(id)){
+
+        newProblems.push(
+          map.get(id)
+        );
+
+      }
+
+    }
+  );
+
+  /*
+    念のため、一覧にない問題を
+    消さない
+  */
+
+  test.problems.forEach(
+    function(problem){
+
+      if(
+        !newProblems.includes(
+          problem
+        )
+      ){
+
+        newProblems.push(
+          problem
+        );
+
+      }
+
+    }
+  );
+
+  test.problems =
+    newProblems;
+
+  saveDB();
+
+  showToast(
+    "並び順を保存しました"
+  );
+
+}
+
+/* =================================================
+   イベント登録
 ================================================= */
 
 function bindEvents(){
 
-  /* -------------------------
-     新しいテスト
-  ------------------------- */
+  /* =========================
+     ホーム
+  ========================= */
 
   const newTest =
     $("new-test");
@@ -2417,27 +3182,9 @@ function bindEvents(){
 
   }
 
-  /* -------------------------
-     問題追加
-  ------------------------- */
-
-  const addProblemButton =
-    $("add-problem");
-
-  if(addProblemButton){
-
-    addProblemButton.onclick =
-      addProblem;
-
-  }
-
-  /* -------------------------
-     問題編集
-  ------------------------- */
-
   document
     .querySelectorAll(
-      ".edit-problem"
+      ".play-test"
     )
     .forEach(
       function(button){
@@ -2445,7 +3192,7 @@ function bindEvents(){
         button.onclick =
           function(){
 
-            openProblem(
+            startTest(
               button.dataset.id
             );
 
@@ -2453,206 +3200,6 @@ function bindEvents(){
 
       }
     );
-
-  /* -------------------------
-     問題削除
-  ------------------------- */
-
-  document
-    .querySelectorAll(
-      ".delete-problem"
-    )
-    .forEach(
-      function(button){
-
-        button.onclick =
-          function(){
-
-            deleteProblem(
-              button.dataset.id
-            );
-
-          };
-
-      }
-    );
-
-  /* -------------------------
-     テスト名保存
-  ------------------------- */
-
-  const testName =
-    $("test-name");
-
-  const saveCreate =
-    $("save-create");
-
-  if(saveCreate){
-
-    saveCreate.onclick =
-      function(){
-
-        const test =
-          getTest();
-
-        if(!test){
-
-          return;
-
-        }
-
-        test.name =
-          testName.value.trim() ||
-          "無題のテスト";
-
-        saveDB();
-
-        go("home");
-
-      };
-
-  }
-
-  /* -------------------------
-     画像選択
-  ------------------------- */
-
-  const pickImage =
-    $("pick-image");
-
-  const imageInput =
-    $("image-input");
-
-  if(
-    pickImage &&
-    imageInput
-  ){
-
-    pickImage.onclick =
-      function(){
-
-        imageInput.click();
-
-      };
-
-    imageInput.onchange =
-      function(){
-
-        const file =
-          imageInput.files &&
-          imageInput.files[0];
-
-        if(file){
-
-          readImage(file);
-
-        }
-
-      };
-
-  }
-
-  /* -------------------------
-     問題保存
-  ------------------------- */
-
-  const saveProblemButton =
-    $("save-problem");
-
-  if(saveProblemButton){
-
-    saveProblemButton.onclick =
-      saveProblem;
-
-  }
-
-  /* -------------------------
-     赤枠追加
-  ------------------------- */
-
-  const addMaskButton =
-    $("add-mask");
-
-  if(addMaskButton){
-
-    addMaskButton.onclick =
-      addMask;
-
-  }
-
-  /* -------------------------
-     赤枠削除
-  ------------------------- */
-
-  document
-    .querySelectorAll(
-      ".delete-mask"
-    )
-    .forEach(
-      function(button){
-
-        button.onclick =
-          function(){
-
-            const id =
-              button.dataset.id;
-
-            state.masks =
-              state.masks.filter(
-                function(mask){
-
-                  return mask.id !== id;
-
-                }
-              );
-
-            if(
-              state.selectedMask === id
-            ){
-
-              state.selectedMask =
-                null;
-
-            }
-
-            render();
-
-          };
-
-      }
-    );
-
-  /* -------------------------
-     保存して次の問題
-  ------------------------- */
-
-  const addNext =
-    $("add-problem-from-edit");
-
-  if(addNext){
-
-    addNext.onclick =
-      addProblemFromEdit;
-
-  }
-
-  /* -------------------------
-     現在の問題削除
-  ------------------------- */
-
-  const deleteCurrent =
-    $("delete-current-problem");
-
-  if(deleteCurrent){
-
-    deleteCurrent.onclick =
-      deleteCurrentProblem;
-
-  }
-
-  /* -------------------------
-     設定画面
-  ------------------------- */
 
   document
     .querySelectorAll(
@@ -2674,34 +3221,49 @@ function bindEvents(){
       }
     );
 
-  /* -------------------------
-     ホームへ
-  ------------------------- */
+  /* =========================
+     テスト作成
+  ========================= */
 
-  document
-    .querySelectorAll(
-      ".back-home"
-    )
-    .forEach(
-      function(button){
+  const addProblemButton =
+    $("add-problem");
 
-        button.onclick =
-          function(){
+  if(addProblemButton){
 
-            go("home");
+    addProblemButton.onclick =
+      addProblem;
 
-          };
+  }
 
-      }
-    );
+  const saveCreate =
+    $("save-create");
 
-  const backHome =
-    $("back-home");
+  if(saveCreate){
 
-  if(backHome){
-
-    backHome.onclick =
+    saveCreate.onclick =
       function(){
+
+        const test =
+          getTest();
+
+        if(!test){
+
+          return;
+
+        }
+
+        const input =
+          $("test-name");
+
+        if(input){
+
+          test.name =
+            input.value.trim() ||
+            "無題のテスト";
+
+        }
+
+        saveDB();
 
         go("home");
 
@@ -2709,23 +3271,69 @@ function bindEvents(){
 
   }
 
-  const backCreate =
-    $("back-create");
+  /* =========================
+     問題編集
+  ========================= */
 
-  if(backCreate){
+  document
+    .querySelectorAll(
+      ".edit-problem"
+    )
+    .forEach(
+      function(button){
 
-    backCreate.onclick =
+        button.onclick =
+          function(){
+
+            openProblem(
+              button.dataset.id
+            );
+
+          };
+
+      }
+    );
+
+  document
+    .querySelectorAll(
+      ".delete-problem"
+    )
+    .forEach(
+      function(button){
+
+        button.onclick =
+          function(){
+
+            deleteProblem(
+              button.dataset.id
+            );
+
+          };
+
+      }
+    );
+
+  /* =========================
+     設定から問題追加
+  ========================= */
+
+  const settingsAdd =
+    $("settings-add-problem");
+
+  if(settingsAdd){
+
+    settingsAdd.onclick =
       function(){
 
-        go("create");
+        addProblem();
 
       };
 
   }
 
-  /* -------------------------
-     設定：テスト名
-  ------------------------- */
+  /* =========================
+     設定：名前
+  ========================= */
 
   const settingName =
     $("setting-name");
@@ -2754,16 +3362,16 @@ function bindEvents(){
 
   }
 
-  /* -------------------------
+  /* =========================
      設定：固定
-  ------------------------- */
+  ========================= */
 
-  const fixedTest =
+  const fixed =
     $("fixed-test");
 
-  if(fixedTest){
+  if(fixed){
 
-    fixedTest.onchange =
+    fixed.onchange =
       function(){
 
         const test =
@@ -2775,21 +3383,18 @@ function bindEvents(){
 
         }
 
-        if(fixedTest.checked){
+        if(fixed.checked){
 
           db.fixedId =
             test.id;
 
-        }else{
+        }else if(
+          db.fixedId ===
+          test.id
+        ){
 
-          if(
-            db.fixedId === test.id
-          ){
-
-            db.fixedId =
-              null;
-
-          }
+          db.fixedId =
+            null;
 
         }
 
@@ -2801,9 +3406,9 @@ function bindEvents(){
 
   }
 
-  /* -------------------------
+  /* =========================
      設定：削除
-  ------------------------- */
+  ========================= */
 
   const deleteTestButton =
     $("delete-test");
@@ -2815,13 +3420,100 @@ function bindEvents(){
 
   }
 
-  /* -------------------------
-     解答開始
-  ------------------------- */
+  /* =========================
+     ホーム
+  ========================= */
+
+  const settingsHome =
+    $("settings-home");
+
+  if(settingsHome){
+
+    settingsHome.onclick =
+      function(){
+
+        go("home");
+
+      };
+
+  }
+
+  const backHome =
+    $("back-home");
+
+  if(backHome){
+
+    backHome.onclick =
+      function(){
+
+        go("home");
+
+      };
+
+  }
+
+  /* =========================
+     問題編集：画像
+  ========================= */
+
+  const pickImage =
+    $("pick-image");
+
+  const imageInput =
+    $("image-input");
+
+  if(
+    pickImage &&
+    imageInput
+  ){
+
+    pickImage.onclick =
+      function(){
+
+        imageInput.click();
+
+      };
+
+    imageInput.onchange =
+      function(){
+
+        const file =
+          imageInput.files &&
+          imageInput.files[0];
+
+        if(file){
+
+          readImage(
+            file
+          );
+
+        }
+
+      };
+
+  }
+
+  /* =========================
+     赤枠追加
+  ========================= */
+
+  const addMaskButton =
+    $("add-mask");
+
+  if(addMaskButton){
+
+    addMaskButton.onclick =
+      addMask;
+
+  }
+
+  /* =========================
+     赤枠選択
+  ========================= */
 
   document
     .querySelectorAll(
-      ".play-test"
+      "[data-select-mask]"
     )
     .forEach(
       function(button){
@@ -2829,49 +3521,185 @@ function bindEvents(){
         button.onclick =
           function(){
 
-            state.testId =
-              button.dataset.id;
-
-            state.answerIndex =
-              0;
-
-            const test =
-              getTest();
-
-            if(
-              !test ||
-              test.problems.length === 0
-            ){
-
-              showToast(
-                "このテストには問題がありません"
-              );
-
-              return;
-
-            }
-
-            test.problems.forEach(
-              function(problem){
-
-                problem.revealed =
-                  {};
-
-              }
+            selectMask(
+              button.dataset.selectMask
             );
-
-            saveDB();
-
-            go("play");
 
           };
 
       }
     );
 
-  /* -------------------------
-     解答：赤枠
-  ------------------------- */
+  /* =========================
+     赤枠削除
+  ========================= */
+
+  document
+    .querySelectorAll(
+      "[data-delete-mask]"
+    )
+    .forEach(
+      function(button){
+
+        button.onclick =
+          function(){
+
+            deleteMask(
+              button.dataset.deleteMask
+            );
+
+          };
+
+      }
+    );
+
+  /* =========================
+     問題保存
+  ========================= */
+
+  const saveProblemButton =
+    $("save-problem");
+
+  if(saveProblemButton){
+
+    saveProblemButton.onclick =
+      function(){
+
+        saveProblem();
+
+        go("settings");
+
+      };
+
+  }
+
+  /* =========================
+     保存して次の問題
+  ========================= */
+
+  const saveAndAdd =
+    $("save-and-add");
+
+  if(saveAndAdd){
+
+    saveAndAdd.onclick =
+      saveAndAddProblem;
+
+  }
+
+  /* =========================
+     編集画面から戻る
+  ========================= */
+
+  const editBack =
+    $("edit-back");
+
+  if(editBack){
+
+    editBack.onclick =
+      function(){
+
+        saveDB();
+
+        go("settings");
+
+      };
+
+  }
+
+  /* =========================
+     現在の問題削除
+  ========================= */
+
+  const deleteCurrentButton =
+    $("delete-current");
+
+  if(deleteCurrentButton){
+
+    deleteCurrentButton.onclick =
+      deleteCurrent;
+
+  }
+
+  /* =========================
+     解答画面
+  ========================= */
+
+  const playHome =
+    $("play-home");
+
+  if(playHome){
+
+    playHome.onclick =
+      function(){
+
+        go("home");
+
+      };
+
+  }
+
+  const answerPrev =
+    $("answer-prev");
+
+  if(answerPrev){
+
+    answerPrev.onclick =
+      function(){
+
+        if(
+          state.answerIndex > 0
+        ){
+
+          state.answerIndex--;
+
+          render();
+
+        }
+
+      };
+
+  }
+
+  const answerNext =
+    $("answer-next");
+
+  if(answerNext){
+
+    answerNext.onclick =
+      function(){
+
+        const test =
+          getTest();
+
+        if(!test){
+
+          return;
+
+        }
+
+        if(
+          state.answerIndex <
+          test.problems.length - 1
+        ){
+
+          state.answerIndex++;
+
+          render();
+
+        }else{
+
+          go("home");
+
+        }
+
+      };
+
+  }
+
+  /*
+    赤枠をタップして答えを表示
+  */
 
   document
     .querySelectorAll(
@@ -2903,18 +3731,18 @@ function bindEvents(){
 
             }
 
-            if(!problem.revealed){
+            if(
+              !problem.revealed
+            ){
 
               problem.revealed =
                 {};
 
             }
 
-            const id =
-              mask.dataset.maskId;
-
-            problem.revealed[id] =
-              true;
+            problem.revealed[
+              mask.dataset.maskId
+            ] = true;
 
             saveDB();
 
@@ -2925,109 +3753,22 @@ function bindEvents(){
       }
     );
 
-  /* -------------------------
-     前へ
-  ------------------------- */
-
-  const prev =
-    $("prev");
-
-  if(prev){
-
-    prev.onclick =
-      function(){
-
-        if(
-          state.answerIndex > 0
-        ){
-
-          state.answerIndex--;
-
-          render();
-
-        }
-
-      };
-
-  }
-
-  /* -------------------------
-     次へ
-  ------------------------- */
-
-  const next =
-    $("next");
-
-  if(next){
-
-    next.onclick =
-      function(){
-
-        const test =
-          getTest();
-
-        if(!test){
-
-          return;
-
-        }
-
-        if(
-          state.answerIndex <
-          test.problems.length - 1
-        ){
-
-          state.answerIndex++;
-
-          render();
-
-        }else{
-
-          go("home");
-
-        }
-
-      };
-
-  }
-
-  /* -------------------------
-     終了
-  ------------------------- */
-
-  document
-    .querySelectorAll(
-      ".quit"
-    )
-    .forEach(
-      function(button){
-
-        button.onclick =
-          function(){
-
-            go("home");
-
-          };
-
-      }
-    );
-
-  /* -------------------------
-     赤枠操作
-  ------------------------- */
+  /*
+    赤枠編集操作
+  */
 
   setupMaskControls();
 
-  /* -------------------------
-     並び替え
-  ------------------------- */
+  /*
+    並び替え
+  */
 
-  enableSorting();
+  setupSorting();
 
 }
 
 /* =================================================
-   描画
+   画面描画
 ================================================= */
 
 function render(){
@@ -3061,17 +3802,17 @@ function render(){
 
         break;
 
-      case "edit":
-
-        app.innerHTML =
-          renderEdit();
-
-        break;
-
       case "settings":
 
         app.innerHTML =
           renderSettings();
+
+        break;
+
+      case "edit":
+
+        app.innerHTML =
+          renderEdit();
 
         break;
 
@@ -3097,7 +3838,6 @@ function render(){
   }catch(error){
 
     console.error(
-      "描画エラー:",
       error
     );
 
@@ -3109,26 +3849,22 @@ function render(){
           エラーが発生しました
         </h1>
 
-        <div class="card">
+        <div class="error-box">
 
-          <p>
-            アプリの読み込み中に
-            エラーが発生しました。
-          </p>
-
-          <p class="small muted">
-            ${escapeHTML(
-              error.message
-            )}
-          </p>
-
-          <button
-            class="blue"
-            onclick="location.reload()">
-            再読み込み
-          </button>
+          ${escapeHTML(
+            error.message
+          )}
 
         </div>
+
+        <button
+          class="blue"
+          style="margin-top:16px"
+          onclick="location.reload()">
+
+          再読み込み
+
+        </button>
 
       </div>
 
@@ -3139,7 +3875,7 @@ function render(){
 }
 
 /* =================================================
-   起動
+   起動処理
 ================================================= */
 
 function start(){
@@ -3147,44 +3883,42 @@ function start(){
   loadDB();
 
   /*
-    固定されたテストが存在し、
-    問題も1問以上ある場合は
-    起動直後にそのテストを開始
+    固定されたテストがあれば、
+    サイトを開いた瞬間に開始する。
+
+    ただし問題が0問なら
+    ホーム画面を表示。
   */
 
-  if(
-    db.fixedId &&
-    db.tests.some(
-      function(test){
+  if(db.fixedId){
 
-        return (
-          test.id ===
-          db.fixedId
-        );
+    const fixedTest =
+      db.tests.find(
+        function(test){
 
-      }
-    )
-  ){
+          return (
+            test.id ===
+            db.fixedId
+          );
 
-    state.testId =
-      db.fixedId;
-
-    state.answerIndex =
-      0;
-
-    const test =
-      getTest();
+        }
+      );
 
     if(
-      test &&
-      test.problems.length > 0
+      fixedTest &&
+      fixedTest.problems.length > 0
     ){
 
-      test.problems.forEach(
+      state.testId =
+        fixedTest.id;
+
+      state.answerIndex =
+        0;
+
+      fixedTest.problems.forEach(
         function(problem){
 
-          problem.revealed =
-            {};
+          problem.revealed = {};
 
         }
       );
@@ -3211,6 +3945,10 @@ function start(){
   render();
 
 }
+
+/* ==========================================
+  アプリ開始
+================================================= */
 
 start();
 
