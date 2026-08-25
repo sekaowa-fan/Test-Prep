@@ -2667,8 +2667,53 @@ function start(){
 
   loadDB();
 
-  state.screen =
-    "home";
+  if(
+    db.fixedId &&
+    db.tests.some(
+      test => test.id === db.fixedId
+    )
+  ){
+
+    state.testId =
+      db.fixedId;
+
+    state.answerIndex =
+      0;
+
+    const test =
+      getTest();
+
+    if(
+      test &&
+      test.problems.length > 0
+    ){
+
+      test.problems.forEach(
+        problem => {
+
+          problem.revealed = {};
+
+        }
+      );
+
+      saveDB();
+
+      state.screen =
+        "play";
+
+    }else{
+
+      state.screen =
+        "home";
+
+    }
+
+  }else{
+
+    state.screen =
+      "home";
+
+  }
 
   render();
 
