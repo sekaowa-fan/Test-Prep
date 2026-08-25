@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0285FF">
 <title>テスト前対策アプリ</title>
 
@@ -18,6 +18,10 @@ html,body{
   background:#fff;
   color:#111;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+body{
+  min-height:100vh;
 }
 
 button,input{
@@ -53,7 +57,7 @@ button{
 .primary,
 .blue{
   background:#0285FF;
-  color:white;
+  color:#fff;
   border-radius:12px;
   padding:12px 16px;
   font-weight:700;
@@ -107,7 +111,7 @@ button{
   margin:22px 0;
 }
 
-input[type=text]{
+input[type="text"]{
   width:100%;
   margin-top:6px;
   padding:13px;
@@ -116,7 +120,7 @@ input[type=text]{
   outline:none;
 }
 
-input[type=text]:focus{
+input[type="text"]:focus{
   border-color:#0285FF;
 }
 
@@ -137,7 +141,6 @@ input[type=text]:focus{
   font-size:23px;
   cursor:grab;
   user-select:none;
-  touch-action:none;
 }
 
 .problem-title{
@@ -146,6 +149,10 @@ input[type=text]:focus{
 
 .drop-target{
   border:2px dashed #0285FF;
+}
+
+.dragging{
+  opacity:.45;
 }
 
 .hidden{
@@ -199,10 +206,6 @@ input[type=text]:focus{
   touch-action:none;
 }
 
-.mask-tools{
-  margin-top:12px;
-}
-
 /* =========================
    解答画面
 ========================= */
@@ -239,10 +242,9 @@ input[type=text]:focus{
   right:0;
   bottom:0;
   display:flex;
-  justify-content:space-between;
   gap:10px;
-  padding:10px max(16px,calc((100vw - 760px)/2 + 16px));
-  background:white;
+  padding:10px 16px;
+  background:#fff;
   border-top:1px solid #e5e5e5;
   z-index:50;
 }
@@ -252,7 +254,7 @@ input[type=text]:focus{
 }
 
 /* =========================
-   モーダル
+   モーダル・通知
 ========================= */
 
 .modal{
@@ -272,7 +274,7 @@ input[type=text]:focus{
   overflow:auto;
   padding:20px;
   border-radius:18px;
-  background:white;
+  background:#fff;
 }
 
 .modal-box h3{
@@ -301,171 +303,239 @@ input[type=text]:focus{
   color:#fff;
   white-space:nowrap;
 }
-
-/* 並び替え中 */
-.dragging{
-  opacity:.45;
-}
 </style>
 </head>
 
 <body>
+
 <div id="app"></div>
 
 <script>
 "use strict";
 
-/* =========================================
+/* ==================================================
    データ
-========================================= */
+================================================== */
 
-const STORAGE_KEY = "test_before_app_v3";
+const STORAGE_KEY = "test_before_app_v4";
 
-let db;
-
-try{
-  db = JSON.parse(
-    localStorage.getItem(STORAGE_KEY) ||
-    '{"tests":[],"fixedId":null}'
-  );
-}catch(e){
-  db = {tests:[],fixedId:null};
-}
-
-if(!Array.isArray(db.tests)){
-  db.tests = [];
-}
-
-let state = {
-  screen:"home",
-  testId:null,
-  problemId:null,
-
-  editImage:null,
-  masks:[],
-  selectedMask:null,
-
-  answerIndex:0
+let db = {
+  tests: [],
+  fixedId: null
 };
 
-/* =========================================
-   基本関数
-========================================= */
+let state = {
+  screen: "home",
+  testId: null,
+  problemId: null,
+  editImage: null,
+  masks: [],
+  selectedMask: null,
+  answerIndex: 0
+};
+  function loadDB(){
 
-const $ = id => document.getElementById(id);
+  try{
 
-function uid(){
-  return Date.now().toString(36) +
-    Math.random().toString(36).slice(2,9);
+    const saved =
+      localStorage.getItem(STORAGE_KEY);
+
+    if(saved){
+
+      const parsed =
+        JSON.parse(saved);
+
+      if(
+        parsed &&
+        Array.isArray(parsed.tests)
+      ){
+
+        db = parsed;
+
+      }
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "データ読み込みエラー:",
+      error
+    );
+
+    db = {
+      tests:[],
+      fixedId:null
+    };
+
+  }
+
+  if(!Array.isArray(db.tests)){
+
+    db.tests = [];
+
+  }
+
 }
 
 function saveDB(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
+
+  try{
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(db)
+    );
+
+  }catch(error){
+
+    console.error(
+      "保存エラー:",
+      error
+    );
+
+    showToast(
+      "保存できませんでした"
+    );
+
+  }
+
+}
+
+function $(id){
+
+  return document.getElementById(id);
+
+}
+
+function uid(){
+
+  return (
+    Date.now().toString(36) +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+
 }
 
 function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g,function(c){
-    return {
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[c];
-  });
+
+  return String(
+    value ?? ""
+  ).replace(
+    /[&<>"']/g,
+    function(c){
+
+      return {
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[c];
+
+    }
+  );
+
 }
 
 function getTest(){
-  return db.tests.find(t => t.id === state.testId);
+
+  return db.tests.find(
+    t => t.id === state.testId
+  ) || null;
+
 }
 
 function getProblem(){
-  const t = getTest();
-  if(!t) return null;
 
-  return t.problems.find(
+  const test =
+    getTest();
+
+  if(!test){
+
+    return null;
+
+  }
+
+  return test.problems.find(
     p => p.id === state.problemId
-  );
+  ) || null;
+
 }
 
 function showToast(text){
-  const old = document.querySelector(".toast");
-  if(old) old.remove();
 
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = text;
+  const old =
+    document.querySelector(
+      ".toast"
+    );
 
-  document.body.appendChild(el);
+  if(old){
 
-  setTimeout(()=>{
-    el.remove();
-  },1500);
+    old.remove();
+
+  }
+
+  const toast =
+    document.createElement(
+      "div"
+    );
+
+  toast.className =
+    "toast";
+
+  toast.textContent =
+    text;
+
+  document.body.appendChild(
+    toast
+  );
+
+  setTimeout(
+    () => toast.remove(),
+    1600
+  );
+
 }
 
 function go(screen){
-  state.screen = screen;
+
+  state.screen =
+    screen;
+
   render();
-  window.scrollTo(0,0);
-}
 
-/* =========================================
-   画面描画
-========================================= */
+  window.scrollTo(
+    0,
+    0
+  );
 
-function render(){
-
-  const app = $("app");
-
-  if(!app) return;
-
-  if(state.screen === "home"){
-    app.innerHTML = renderHome();
   }
+  function header(title,rightHTML=""){
 
-  else if(state.screen === "create"){
-    app.innerHTML = renderCreate();
-  }
-
-  else if(state.screen === "edit"){
-    app.innerHTML = renderEdit();
-  }
-
-  else if(state.screen === "settings"){
-    app.innerHTML = renderSettings();
-  }
-
-  else if(state.screen === "play"){
-    app.innerHTML = renderPlay();
-  }
-
-  bindEvents();
-}
-
-/* =========================================
-   ヘッダー
-========================================= */
-
-function header(title,rightHTML=""){
   return `
     <header class="header">
+
       <h1>${title}</h1>
-      <div>${rightHTML}</div>
+
+      <div>
+        ${rightHTML}
+      </div>
+
     </header>
   `;
-}
 
-/* =========================================
-   ホーム
-========================================= */
+}
 
 function renderHome(){
 
-  let testsHTML = "";
+  let tests = "";
 
   if(db.tests.length === 0){
 
-    testsHTML = `
+    tests = `
       <div class="card muted">
         まだテストがありません。<br>
         「＋ テスト作成」から作ってみよう！
@@ -474,40 +544,67 @@ function renderHome(){
 
   }else{
 
-    testsHTML = db.tests.map(t=>{
+    const sorted =
+      [...db.tests].sort(
+        (a,b) => {
 
-      const fixed =
-        db.fixedId === t.id
-        ? `<span class="small" style="color:#0285FF">● 固定中</span>`
-        : "";
+          if(db.fixedId === a.id){
+            return -1;
+          }
 
-      return `
-        <div class="card">
+          if(db.fixedId === b.id){
+            return 1;
+          }
 
-          <div class="test-name">
-            ${escapeHTML(t.name)} ${fixed}
+          return 0;
+
+        }
+      );
+
+    tests = sorted.map(
+      test => {
+
+        const fixed =
+          db.fixedId === test.id
+          ? `
+            <span
+              class="small"
+              style="color:#0285FF">
+              ● 固定中
+            </span>
+          `
+          : "";
+
+        return `
+          <div class="card">
+
+            <div class="test-name">
+              ${escapeHTML(test.name)}
+              ${fixed}
+            </div>
+
+            <div class="row">
+
+              <button
+                class="blue play-test"
+                data-id="${test.id}">
+                解答する
+              </button>
+
+              <button
+                class="textbtn settings-test"
+                data-id="${test.id}">
+                設定
+              </button>
+
+            </div>
+
           </div>
+        `;
 
-          <div class="row">
+      }
+    ).join("");
 
-            <button
-              class="blue play-test"
-              data-id="${t.id}">
-              解答する
-            </button>
-
-            <button
-              class="textbtn settings-test"
-              data-id="${t.id}">
-              設定
-            </button>
-
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
   }
 
   return `
@@ -515,66 +612,97 @@ function renderHome(){
 
       ${header(
         "テスト前対策アプリ",
-        `<button class="primary" id="new-test">＋ テスト作成</button>`
+        `
+          <button
+            class="primary"
+            id="new-test">
+            ＋ テスト作成
+          </button>
+        `
       )}
 
-      ${testsHTML}
+      ${tests}
 
     </div>
   `;
-}
 
-/* =========================================
-   テスト作成
-========================================= */
+}
 
 function renderCreate(){
 
-  const t = getTest();
+  const test =
+    getTest();
 
-  if(!t){
-    return "";
-  }
-
-  const problems = t.problems.map((p,index)=>{
+  if(!test){
 
     return `
-      <div
-        class="problem-row"
-        draggable="true"
-        data-problem-id="${p.id}">
+      <div class="app">
 
-        <span class="drag">☰</span>
-
-        <span class="problem-title">
-          ${index+1}問目
-        </span>
-
-        <span class="spacer"></span>
+        <p>
+          テストが見つかりません。
+        </p>
 
         <button
-          class="textbtn edit-problem"
-          data-id="${p.id}">
-          編集
-        </button>
-
-        <button
-          class="textbtn danger delete-problem"
-          data-id="${p.id}">
-          削除
+          class="blue"
+          id="back-home">
+          ホーム
         </button>
 
       </div>
     `;
 
-  }).join("");
+  }
+
+  const problems =
+    test.problems.map(
+      (problem,index) => {
+
+        return `
+          <div
+            class="problem-row"
+            draggable="true"
+            data-problem-id="${problem.id}">
+
+            <span class="drag">
+              ☰
+            </span>
+
+            <span class="problem-title">
+              ${index + 1}問目
+            </span>
+
+            <span class="spacer"></span>
+
+            <button
+              class="textbtn edit-problem"
+              data-id="${problem.id}">
+              編集
+            </button>
+
+            <button
+              class="textbtn danger delete-problem"
+              data-id="${problem.id}">
+              削除
+            </button>
+
+          </div>
+        `;
+
+      }
+    ).join("");
 
   return `
     <div class="app">
 
       ${header(
         "テスト作成",
-        `<button class="blue add-problem">＋ 問題追加</button>`
+        `
+          <button
+            class="blue"
+            id="add-problem">
+            ＋ 問題追加
+          </button>
+        `
       )}
 
       <div class="section">
@@ -586,7 +714,7 @@ function renderCreate(){
         <input
           id="test-name"
           type="text"
-          value="${escapeHTML(t.name)}">
+          value="${escapeHTML(test.name)}">
 
       </div>
 
@@ -594,7 +722,11 @@ function renderCreate(){
 
         ${
           problems ||
-          `<p class="muted">問題を追加してください。</p>`
+          `
+            <p class="muted">
+              問題を追加してください。
+            </p>
+          `
         }
 
       </div>
@@ -611,53 +743,72 @@ function renderCreate(){
 
     </div>
   `;
-}
 
-/* =========================================
-   問題編集
-========================================= */
+}
 
 function renderEdit(){
 
-  const p = getProblem();
+  const problem =
+    getProblem();
 
-  if(!p){
+  if(!problem){
+
     return `
       <div class="app">
+
         ${header("問題編集")}
-        <p>問題が見つかりません。</p>
+
+        <p>
+          問題が見つかりません。
+        </p>
+
+        <button
+          class="blue"
+          id="back-create">
+          戻る
+        </button>
+
       </div>
     `;
+
   }
 
-  let editor = "";
+  let editorHTML = "";
 
   if(state.editImage){
 
-    const masks = state.masks.map(m=>{
+    const masks =
+      state.masks.map(
+        mask => {
 
-      return `
-        <div
-          class="mask ${state.selectedMask === m.id ? "selected" : ""}"
-          data-mask-id="${m.id}"
-          style="
-            left:${m.x}%;
-            top:${m.y}%;
-            width:${m.w}%;
-            height:${m.h}%;
-          "
-        >
-          ${
-            state.selectedMask === m.id
-            ? `<span class="resize-handle"></span>`
-            : ""
-          }
-        </div>
-      `;
+          return `
+            <div
+              class="mask ${
+                state.selectedMask === mask.id
+                ? "selected"
+                : ""
+              }"
+              data-mask-id="${mask.id}"
+              style="
+                left:${mask.x}%;
+                top:${mask.y}%;
+                width:${mask.w}%;
+                height:${mask.h}%;
+              ">
 
-    }).join("");
+              ${
+                state.selectedMask === mask.id
+                ? `<span class="resize-handle"></span>`
+                : ""
+              }
 
-    editor = `
+            </div>
+          `;
+
+        }
+      ).join("");
+
+    editorHTML = `
       <div
         class="editor-wrap"
         id="editor">
@@ -665,7 +816,8 @@ function renderEdit(){
         <img
           id="editor-image"
           class="editor-img"
-          src="${state.editImage}">
+          src="${state.editImage}"
+          alt="教科書画像">
 
         ${masks}
 
@@ -674,7 +826,7 @@ function renderEdit(){
 
   }else{
 
-    editor = `
+    editorHTML = `
       <div class="card">
 
         <button
@@ -691,62 +843,78 @@ function renderEdit(){
 
       </div>
     `;
+
   }
 
-  const maskList = state.masks.map((m,index)=>{
+  const maskList =
+    state.masks.map(
+      (mask,index) => {
 
-    return `
-      <div class="card row">
+        return `
+          <div class="card row">
 
-        <b>${index+1}個目</b>
+            <b>
+              ${index + 1}個目
+            </b>
 
-        <span class="spacer"></span>
+            <span class="spacer"></span>
 
-        <button
-          class="textbtn danger delete-mask"
-          data-id="${m.id}">
-          削除
-        </button>
+            <button
+              class="textbtn danger delete-mask"
+              data-id="${mask.id}">
+              削除
+            </button>
 
-      </div>
-    `;
+          </div>
+        `;
 
-  }).join("");
+      }
+    ).join("");
 
   return `
     <div class="app">
 
       ${header(
         "問題編集",
-        `<button class="blue" id="save-problem">保存</button>`
+        `
+          <button
+            class="blue"
+            id="save-problem">
+            保存
+          </button>
+        `
       )}
 
-      <div class="small muted" style="margin-bottom:8px">
+      <div
+        class="small muted"
+        style="margin-bottom:8px">
+
         赤い枠をドラッグして移動できます。<br>
         青い丸をドラッグすると大きさを変更できます。
+
       </div>
 
-      ${editor}
+      ${editorHTML}
 
-      <div class="row mask-tools">
+      ${
+        state.editImage
+        ? `
+          <div class="row mask-tools">
 
-        ${
-          state.editImage
-          ? `
             <button
               class="blue"
               id="add-mask">
               ＋ 隠す場所を追加
             </button>
-          `
-          : ""
-        }
 
-        <span class="muted small">
-          ${state.masks.length}個の隠し場所
-        </span>
+            <span class="muted small">
+              ${state.masks.length}個の隠し場所
+            </span>
 
-      </div>
+          </div>
+        `
+        : ""
+      }
 
       ${maskList}
 
@@ -772,54 +940,69 @@ function renderEdit(){
 
     </div>
   `;
+
 }
+  function renderSettings(){
 
-/* =========================================
-   設定
-========================================= */
+  const test =
+    getTest();
 
-function renderSettings(){
-
-  const t = getTest();
-
-  if(!t){
-    return "";
-  }
-
-  const list = t.problems.map((p,index)=>{
+  if(!test){
 
     return `
-      <div class="problem-row">
+      <div class="app">
 
-        <span>
-          ${index+1}問目
-        </span>
-
-        <span class="spacer"></span>
-
-        <button
-          class="textbtn edit-problem"
-          data-id="${p.id}">
-          編集
-        </button>
-
-        <button
-          class="textbtn danger delete-problem"
-          data-id="${p.id}">
-          削除
-        </button>
+        <p>
+          テストが見つかりません。
+        </p>
 
       </div>
     `;
 
-  }).join("");
+  }
+
+  const list =
+    test.problems.map(
+      (problem,index) => {
+
+        return `
+          <div class="problem-row">
+
+            <span>
+              ${index + 1}問目
+            </span>
+
+            <span class="spacer"></span>
+
+            <button
+              class="textbtn edit-problem"
+              data-id="${problem.id}">
+              編集
+            </button>
+
+            <button
+              class="textbtn danger delete-problem"
+              data-id="${problem.id}">
+              削除
+            </button>
+
+          </div>
+        `;
+
+      }
+    ).join("");
 
   return `
     <div class="app">
 
       ${header(
         "設定",
-        `<button class="textbtn back-home">ホーム</button>`
+        `
+          <button
+            class="textbtn back-home">
+            ホーム
+          </button>
+        `
       )}
 
       <div class="section">
@@ -831,7 +1014,7 @@ function renderSettings(){
         <input
           id="setting-name"
           type="text"
-          value="${escapeHTML(t.name)}">
+          value="${escapeHTML(test.name)}">
 
       </div>
 
@@ -840,7 +1023,11 @@ function renderSettings(){
         <input
           id="fixed-test"
           type="checkbox"
-          ${db.fixedId === t.id ? "checked" : ""}>
+          ${
+            db.fixedId === test.id
+            ? "checked"
+            : ""
+          }>
 
         <label for="fixed-test">
           このテストをトップに固定する
@@ -852,7 +1039,14 @@ function renderSettings(){
 
         <h2>問題一覧</h2>
 
-        ${list || `<p class="muted">問題がありません。</p>`}
+        ${
+          list ||
+          `
+            <p class="muted">
+              問題がありません。
+            </p>
+          `
+        }
 
       </div>
 
@@ -868,81 +1062,118 @@ function renderSettings(){
 
     </div>
   `;
-}
 
-/* =========================================
-   解答
-========================================= */
+}
 
 function renderPlay(){
 
-  const t = getTest();
+  const test =
+    getTest();
 
-  if(!t || !t.problems.length){
+  if(
+    !test ||
+    test.problems.length === 0
+  ){
 
     return `
       <div class="app">
 
         ${header(
           "解答",
-          `<button class="textbtn quit">ホーム</button>`
+          `
+            <button
+              class="textbtn quit">
+              ホーム
+            </button>
+          `
         )}
 
-        <p>問題がありません。</p>
+        <p>
+          問題がありません。
+        </p>
 
       </div>
     `;
+
   }
 
-  if(state.answerIndex >= t.problems.length){
+  if(
+    state.answerIndex < 0 ||
+    state.answerIndex >=
+    test.problems.length
+  ){
+
     state.answerIndex = 0;
+
   }
 
-  const p = t.problems[state.answerIndex];
+  const problem =
+    test.problems[
+      state.answerIndex
+    ];
 
-  if(!p.revealed){
-    p.revealed = {};
+  if(!problem.revealed){
+
+    problem.revealed = {};
+
   }
 
-  const masks = p.masks.map(m=>{
+  const masks =
+    (problem.masks || []).map(
+      mask => {
 
-    const revealed = p.revealed[m.id] === true;
+        const revealed =
+          problem.revealed[
+            mask.id
+          ] === true;
 
-    return `
-      <div
-        class="answer-mask ${revealed ? "revealed" : ""}"
-        data-mask-id="${m.id}"
-        style="
-          left:${m.x}%;
-          top:${m.y}%;
-          width:${m.w}%;
-          height:${m.h}%;
-        ">
-      </div>
-    `;
+        return `
+          <div
+            class="answer-mask ${
+              revealed
+              ? "revealed"
+              : ""
+            }"
+            data-mask-id="${mask.id}"
+            style="
+              left:${mask.x}%;
+              top:${mask.y}%;
+              width:${mask.w}%;
+              height:${mask.h}%;
+            ">
+          </div>
+        `;
 
-  }).join("");
+      }
+    ).join("");
 
   return `
     <div class="app">
 
       ${header(
-        `${state.answerIndex+1} / ${t.problems.length}`,
-        `<button class="textbtn quit">ホーム</button>`
+        `${state.answerIndex + 1} / ${test.problems.length}`,
+        `
+          <button
+            class="textbtn quit">
+            ホーム
+          </button>
+        `
       )}
 
       <div class="card">
+
         <div class="test-name">
-          ${escapeHTML(t.name)}
+          ${escapeHTML(test.name)}
         </div>
+
       </div>
 
-      <div
-        class="answer-wrap">
+      <div class="answer-wrap">
 
         <img
           class="answer-img"
-          src="${p.image}">
+          src="${problem.image}"
+          alt="問題">
 
         ${masks}
 
@@ -966,705 +1197,138 @@ function renderPlay(){
 
     </div>
   `;
+
 }
 
-/* =========================================
-   新規テスト
-========================================= */
+function render(){
 
-function createTest(){
+  const app =
+    $("app");
 
-  const t = {
+  if(!app){
+
+    return;
+
+  }
+
+  try{
+
+    switch(state.screen){
+
+      case "home":
+
+        app.innerHTML =
+          renderHome();
+
+        break;
+
+      case "create":
+
+        app.innerHTML =
+          renderCreate();
+
+        break;
+
+      case "edit":
+
+        app.innerHTML =
+          renderEdit();
+
+        break;
+
+      case "settings":
+
+        app.innerHTML =
+          renderSettings();
+
+        break;
+
+      case "play":
+
+        app.innerHTML =
+          renderPlay();
+
+        break;
+
+      default:
+
+        state.screen =
+          "home";
+
+        app.innerHTML =
+          renderHome();
+
+    }
+
+    bindEvents();
+
+  }catch(error){
+
+    console.error(
+      "描画エラー:",
+      error
+    );
+
+    app.innerHTML = `
+      <div class="app">
+
+        <h1>
+          エラーが発生しました
+        </h1>
+
+        <div class="card">
+
+          <p>
+            アプリの読み込み中に
+            エラーが発生しました。
+          </p>
+
+          <button
+            class="blue"
+            onclick="location.reload()">
+            再読み込み
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  }
+
+}
+  function createTest(){
+
+  const test = {
+
     id:uid(),
+
     name:"新しいテスト",
+
     problems:[]
+
   };
 
-  db.tests.push(t);
+  db.tests.push(test);
+
+  state.testId =
+    test.id;
+
+  state.problemId =
+    null;
+
   saveDB();
 
-  state.testId = t.id;
-
   go("create");
-}
 
-/* =========================================
-   問題追加
-========================================= */
+}
 
 function addProblem(){
 
-  const t = getTest();
+  const test =
+    getTest();
 
-  if(!t){
-    showToast("テストが見つかりません");
-    return;
-  }
-
-  const p = {
-    id:uid(),
-    image:"",
-    masks:[],
-    revealed:{}
-  };
-
-  t.problems.push(p);
-
-  state.problemId = p.id;
-  state.editImage = null;
-  state.masks = [];
-  state.selectedMask = null;
-
-  saveDB();
-
-  go("edit");
-}
-
-/* =========================================
-   編集画面へ
-========================================= */
-
-function openProblem(id){
-
-  const t = getTest();
-
-  if(!t) return;
-
-  const p = t.problems.find(x=>x.id === id);
-
-  if(!p) return;
-
-  state.problemId = id;
-  state.editImage = p.image || null;
-  state.masks = JSON.parse(
-    JSON.stringify(p.masks || [])
-  );
-  state.selectedMask = null;
-
-  go("edit");
-}
-
-/* =========================================
-   画像
-========================================= */
-
-function readImage(file){
-
-  const reader = new FileReader();
-
-  reader.onload = function(){
-
-    state.editImage = reader.result;
-
-    render();
-  };
-
-  reader.readAsDataURL(file);
-}
-
-/* =========================================
-   問題保存
-========================================= */
-
-function saveProblem(){
-
-  const p = getProblem();
-
-  if(!p) return;
-
-  if(!state.editImage){
-
-    showToast("画像を追加してください");
-
-    return;
-  }
-
-  p.image = state.editImage;
-
-  p.masks = state.masks.map(m=>({
-    id:m.id,
-    x:m.x,
-    y:m.y,
-    w:m.w,
-    h:m.h
-  }));
-
-  p.revealed = {};
-
-  saveDB();
-
-  go("create");
-}
-
-/* =========================================
-   問題削除
-========================================= */
-
-function deleteProblem(id){
-
-  const t = getTest();
-
-  if(!t) return;
-
-  const p = t.problems.find(x=>x.id === id);
-
-  if(!p) return;
-
-  if(!window.confirm("この問題を削除しますか？")){
-    return;
-  }
-
-  t.problems =
-    t.problems.filter(x=>x.id !== id);
-
-  saveDB();
-
-  if(state.problemId === id){
-    state.problemId = null;
-  }
-
-  render();
-}
-
-/* =========================================
-   現在の問題を削除
-========================================= */
-
-function deleteCurrentProblem(){
-
-  const t = getTest();
-
-  if(!t) return;
-
-  if(!window.confirm("この問題を削除しますか？")){
-    return;
-  }
-
-  t.problems =
-    t.problems.filter(
-      p => p.id !== state.problemId
-    );
-
-  saveDB();
-
-  state.problemId = null;
-
-  go("create");
-}
-
-/* =========================================
-   テスト削除
-========================================= */
-
-function deleteTest(){
-
-  const t = getTest();
-
-  if(!t) return;
-
-  if(!window.confirm(
-    "このテストを削除しますか？\nこの操作は元に戻せません。"
-  )){
-    return;
-  }
-
-  if(db.fixedId === t.id){
-    db.fixedId = null;
-  }
-
-  db.tests =
-    db.tests.filter(x=>x.id !== t.id);
-
-  saveDB();
-
-  state.testId = null;
-
-  go("home");
-}
-
-/* =========================================
-   問題並び替え
-========================================= */
-
-let dragProblemId = null;
-
-function enableSorting(){
-
-  document
-    .querySelectorAll(".problem-row[draggable]")
-    .forEach(row=>{
-
-      row.addEventListener("dragstart",function(e){
-
-        dragProblemId =
-          row.dataset.problemId;
-
-        row.classList.add("dragging");
-
-        e.dataTransfer.effectAllowed = "move";
-
-      });
-
-      row.addEventListener("dragend",function(){
-
-        row.classList.remove("dragging");
-
-        document
-          .querySelectorAll(".problem-row")
-          .forEach(x=>{
-            x.classList.remove("drop-target");
-          });
-
-        dragProblemId = null;
-
-      });
-
-      row.addEventListener("dragover",function(e){
-
-        e.preventDefault();
-
-        if(
-          dragProblemId &&
-          dragProblemId !== row.dataset.problemId
-        ){
-          row.classList.add("drop-target");
-        }
-
-      });
-
-      row.addEventListener("dragleave",function(){
-
-        row.classList.remove("drop-target");
-
-      });
-
-      row.addEventListener("drop",function(e){
-
-        e.preventDefault();
-
-        row.classList.remove("drop-target");
-
-        const fromId = dragProblemId;
-        const toId = row.dataset.problemId;
-
-        if(!fromId || fromId === toId){
-          return;
-        }
-
-        const t = getTest();
-
-        if(!t) return;
-
-        const fromIndex =
-          t.problems.findIndex(
-            p=>p.id === fromId
-          );
-
-        const toIndex =
-          t.problems.findIndex(
-            p=>p.id === toId
-          );
-
-        if(fromIndex < 0 || toIndex < 0){
-          return;
-        }
-
-        const moved =
-          t.problems.splice(fromIndex,1)[0];
-
-        t.problems.splice(
-          toIndex,
-          0,
-          moved
-        );
-
-        saveDB();
-
-        render();
-
-      });
-
-    });
-}
-
-/* =========================================
-   赤枠操作
-========================================= */
-
-function setupMaskControls(){
-
-  const editor = $("editor");
-
-  if(!editor) return;
-
-  document.querySelectorAll(".mask").forEach(el=>{
-
-    const id = el.dataset.maskId;
-    const mask = state.masks.find(m => m.id === id);
-
-    if(!mask) return;
-
-    /* -------------------------
-       赤枠をタップして選択
-    ------------------------- */
-
-    el.addEventListener("pointerdown",function(e){
-
-      if(e.target.classList.contains("resize-handle")){
-        return;
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      state.selectedMask = id;
-
-      const rect = editor.getBoundingClientRect();
-
-      const startX = e.clientX;
-      const startY = e.clientY;
-
-      const startLeft = mask.x;
-      const startTop = mask.y;
-
-      el.setPointerCapture(e.pointerId);
-
-      function move(ev){
-
-        const dx =
-          (ev.clientX - startX) /
-          rect.width * 100;
-
-        const dy =
-          (ev.clientY - startY) /
-          rect.height * 100;
-
-        mask.x = Math.max(
-          0,
-          Math.min(
-            100 - mask.w,
-            startLeft + dx
-          )
-        );
-
-        mask.y = Math.max(
-          0,
-          Math.min(
-            100 - mask.h,
-            startTop + dy
-          )
-        );
-
-        el.style.left = mask.x + "%";
-        el.style.top = mask.y + "%";
-      }
-
-      function up(){
-
-        try{
-          el.releasePointerCapture(e.pointerId);
-        }catch(err){}
-
-        el.removeEventListener(
-          "pointermove",
-          move
-        );
-
-        el.removeEventListener(
-          "pointerup",
-          up
-        );
-      }
-
-      el.addEventListener(
-        "pointermove",
-        move
-      );
-
-      el.addEventListener(
-        "pointerup",
-        up
-      );
-
-    });
-
-
-    /* -------------------------
-       サイズ変更
-    ------------------------- */
-
-    const handle =
-      el.querySelector(".resize-handle");
-
-    if(!handle) return;
-
-    handle.addEventListener(
-      "pointerdown",
-      function(e){
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        state.selectedMask = id;
-
-        const rect =
-          editor.getBoundingClientRect();
-
-        const startX = e.clientX;
-        const startY = e.clientY;
-
-        const startW = mask.w;
-        const startH = mask.h;
-
-        handle.setPointerCapture(
-          e.pointerId
-        );
-
-        function resize(ev){
-
-          const dx =
-            (ev.clientX - startX) /
-            rect.width * 100;
-
-          const dy =
-            (ev.clientY - startY) /
-            rect.height * 100;
-
-          mask.w = Math.max(
-            5,
-            Math.min(
-              100 - mask.x,
-              startW + dx
-            )
-          );
-
-          mask.h = Math.max(
-            5,
-            Math.min(
-              100 - mask.y,
-              startH + dy
-            )
-          );
-
-          el.style.width =
-            mask.w + "%";
-
-          el.style.height =
-            mask.h + "%";
-        }
-
-        function end(){
-
-          try{
-            handle.releasePointerCapture(
-              e.pointerId
-            );
-          }catch(err){}
-
-          handle.removeEventListener(
-            "pointermove",
-            resize
-          );
-
-          handle.removeEventListener(
-            "pointerup",
-            end
-          );
-        }
-
-        handle.addEventListener(
-          "pointermove",
-          resize
-        );
-
-        handle.addEventListener(
-          "pointerup",
-          end
-        );
-
-      }
-    );
-
-  });
-}
-
-
-/* =========================================
-   問題並び替え
-========================================= */
-
-let dragProblemId = null;
-
-function enableSorting(){
-
-  const rows =
-    document.querySelectorAll(
-      ".problem-row[draggable='true']"
-    );
-
-  rows.forEach(row=>{
-
-    row.addEventListener(
-      "dragstart",
-      function(e){
-
-        dragProblemId =
-          row.dataset.problemId;
-
-        row.classList.add("dragging");
-
-        if(e.dataTransfer){
-          e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData(
-            "text/plain",
-            dragProblemId
-          );
-        }
-
-      }
-    );
-
-
-    row.addEventListener(
-      "dragend",
-      function(){
-
-        row.classList.remove("dragging");
-
-        document
-          .querySelectorAll(".problem-row")
-          .forEach(r=>{
-            r.classList.remove(
-              "drop-target"
-            );
-          });
-
-        dragProblemId = null;
-
-      }
-    );
-
-
-    row.addEventListener(
-      "dragover",
-      function(e){
-
-        e.preventDefault();
-
-        if(
-          dragProblemId &&
-          dragProblemId !==
-          row.dataset.problemId
-        ){
-
-          row.classList.add(
-            "drop-target"
-          );
-
-        }
-
-      }
-    );
-
-
-    row.addEventListener(
-      "dragleave",
-      function(){
-
-        row.classList.remove(
-          "drop-target"
-        );
-
-      }
-    );
-
-
-    row.addEventListener(
-      "drop",
-      function(e){
-
-        e.preventDefault();
-
-        row.classList.remove(
-          "drop-target"
-        );
-
-        let fromId =
-          dragProblemId;
-
-        if(!fromId &&
-           e.dataTransfer){
-
-          fromId =
-            e.dataTransfer.getData(
-              "text/plain"
-            );
-
-        }
-
-        const toId =
-          row.dataset.problemId;
-
-        if(!fromId || !toId) return;
-
-        if(fromId === toId) return;
-
-        const t = getTest();
-
-        if(!t) return;
-
-        const fromIndex =
-          t.problems.findIndex(
-            p => p.id === fromId
-          );
-
-        const toIndex =
-          t.problems.findIndex(
-            p => p.id === toId
-          );
-
-        if(
-          fromIndex === -1 ||
-          toIndex === -1
-        ){
-          return;
-        }
-
-        const moved =
-          t.problems.splice(
-            fromIndex,
-            1
-          )[0];
-
-        t.problems.splice(
-          toIndex,
-          0,
-          moved
-        );
-
-        saveDB();
-
-        dragProblemId = null;
-
-        render();
-
-      }
-    );
-
-  });
-
-}
-
-
-/* =========================================
-   新規問題を追加
-========================================= */
-
-function addProblem(){
-
-  const t = getTest();
-
-  if(!t){
+  if(!test){
 
     showToast(
       "テストが見つかりません"
@@ -1674,7 +1338,7 @@ function addProblem(){
 
   }
 
-  const p = {
+  const problem = {
 
     id:uid(),
 
@@ -1686,101 +1350,116 @@ function addProblem(){
 
   };
 
-  t.problems.push(p);
+  test.problems.push(
+    problem
+  );
 
-  saveDB();
+  state.problemId =
+    problem.id;
 
-  state.problemId = p.id;
-
-  state.editImage = null;
+  state.editImage =
+    null;
 
   state.masks = [];
 
-  state.selectedMask = null;
+  state.selectedMask =
+    null;
+
+  saveDB();
 
   go("edit");
 
 }
 
-
-/* =========================================
-   問題を開く
-========================================= */
-
 function openProblem(id){
 
-  const t = getTest();
+  const test =
+    getTest();
 
-  if(!t) return;
+  if(!test){
 
-  const p =
-    t.problems.find(
-      x => x.id === id
+    return;
+
+  }
+
+  const problem =
+    test.problems.find(
+      p => p.id === id
     );
 
-  if(!p) return;
+  if(!problem){
 
-  state.problemId = id;
+    return;
+
+  }
+
+  state.problemId =
+    id;
 
   state.editImage =
-    p.image || null;
+    problem.image ||
+    null;
 
   state.masks =
     JSON.parse(
       JSON.stringify(
-        p.masks || []
+        problem.masks || []
       )
     );
 
-  state.selectedMask = null;
+  state.selectedMask =
+    null;
 
   go("edit");
 
 }
 
-
-/* =========================================
-   画像読み込み
-========================================= */
-
 function readImage(file){
 
-  if(!file) return;
+  if(!file){
+
+    return;
+
+  }
 
   const reader =
     new FileReader();
 
-  reader.onload = function(){
+  reader.onload =
+    function(){
 
-    state.editImage =
-      reader.result;
+      state.editImage =
+        reader.result;
 
-    render();
+      render();
 
-  };
+    };
 
-  reader.onerror = function(){
+  reader.onerror =
+    function(){
 
-    showToast(
-      "画像を読み込めませんでした"
-    );
+      showToast(
+        "画像を読み込めませんでした"
+      );
 
-  };
+    };
 
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(
+    file
+  );
 
 }
 
-
-/* =========================================
-   問題保存
-========================================= */
-
 function saveProblem(){
 
-  const p = getProblem();
+  const problem =
+    getProblem();
 
-  if(!p) return;
+  if(!problem){
+
+    return;
+
+  }
 
   if(!state.editImage){
 
@@ -1792,25 +1471,27 @@ function saveProblem(){
 
   }
 
-  p.image =
+  problem.image =
     state.editImage;
 
-  p.masks =
-    state.masks.map(m=>({
+  problem.masks =
+    state.masks.map(
+      mask => ({
 
-      id:m.id,
+        id:mask.id,
 
-      x:m.x,
+        x:mask.x,
 
-      y:m.y,
+        y:mask.y,
 
-      w:m.w,
+        w:mask.w,
 
-      h:m.h
+        h:mask.h
 
-    }));
+      })
+    );
 
-  p.revealed = {};
+  problem.revealed = {};
 
   saveDB();
 
@@ -1818,47 +1499,46 @@ function saveProblem(){
 
 }
 
-
-/* =========================================
-   問題削除
-========================================= */
-
 function deleteProblem(id){
 
-  const t = getTest();
+  const test =
+    getTest();
 
-  if(!t) return;
-
-  const index =
-    t.problems.findIndex(
-      p => p.id === id
-    );
-
-  if(index === -1){
-
-    showToast(
-      "問題が見つかりません"
-    );
+  if(!test){
 
     return;
 
   }
 
-  const confirmed =
-    window.confirm(
+  if(
+    !confirm(
       "この問題を削除しますか？"
+    )
+  ){
+
+    return;
+
+  }
+
+  test.problems =
+    test.problems.filter(
+      p => p.id !== id
     );
 
-  if(!confirmed) return;
+  if(
+    state.problemId === id
+  ){
 
-  t.problems.splice(
-    index,
-    1
-  );
+    state.problemId =
+      null;
 
-  if(state.problemId === id){
+    state.editImage =
+      null;
 
-    state.problemId = null;
+    state.masks = [];
+
+    state.selectedMask =
+      null;
 
   }
 
@@ -1868,155 +1548,111 @@ function deleteProblem(id){
 
 }
 
-
-/* =========================================
-   現在編集中の問題を削除
-========================================= */
-
 function deleteCurrentProblem(){
 
-  const t = getTest();
-
-  if(!t) return;
-
-  const id =
-    state.problemId;
-
-  if(!id) return;
-
-  const index =
-    t.problems.findIndex(
-      p => p.id === id
-    );
-
-  if(index === -1){
-
-    showToast(
-      "問題が見つかりません"
-    );
+  if(!state.problemId){
 
     return;
 
   }
 
-  const confirmed =
-    window.confirm(
-      "この問題を削除しますか？"
-    );
+  const id =
+    state.problemId;
 
-  if(!confirmed) return;
+  state.problemId =
+    null;
 
-  t.problems.splice(
-    index,
-    1
-  );
-
-  saveDB();
-
-  state.problemId = null;
-
-  state.editImage = null;
+  state.editImage =
+    null;
 
   state.masks = [];
 
-  state.selectedMask = null;
+  state.selectedMask =
+    null;
+
+  deleteProblem(id);
 
   go("create");
 
 }
+  function deleteTest(){
 
+  const test =
+    getTest();
 
-/* =========================================
-   テスト削除
-========================================= */
+  if(!test){
 
-function deleteTest(){
-
-  const t = getTest();
-
-  if(!t) return;
-
-  const confirmed =
-    window.confirm(
-      "このテストを削除しますか？\n\nこの操作は元に戻せません。"
-    );
-
-  if(!confirmed) return;
-
-  const index =
-    db.tests.findIndex(
-      x => x.id === t.id
-    );
-
-  if(index === -1) return;
-
-  db.tests.splice(
-    index,
-    1
-  );
-
-  if(db.fixedId === t.id){
-
-    db.fixedId = null;
+    return;
 
   }
 
+  if(
+    !confirm(
+      "このテストを削除しますか？\n\nこの操作は元に戻せません。"
+    )
+  ){
+
+    return;
+
+  }
+
+  db.tests =
+    db.tests.filter(
+      t => t.id !== test.id
+    );
+
+  if(
+    db.fixedId === test.id
+  ){
+
+    db.fixedId =
+      null;
+
+  }
+
+  state.testId =
+    null;
+
+  state.problemId =
+    null;
+
   saveDB();
-
-  state.testId = null;
-
-  state.problemId = null;
-
-  state.editImage = null;
-
-  state.masks = [];
-
-  state.selectedMask = null;
 
   go("home");
 
 }
 
-
-/* =========================================
-   編集画面から問題追加
-========================================= */
-
 function addProblemFromEdit(){
 
-  /*
-    現在編集中の問題を保存してから
-    次の問題を追加する
-  */
-
-  const current =
+  const problem =
     getProblem();
 
-  if(current){
+  if(
+    problem &&
+    state.editImage
+  ){
 
-    if(state.editImage){
+    problem.image =
+      state.editImage;
 
-      current.image =
-        state.editImage;
+    problem.masks =
+      state.masks.map(
+        mask => ({
 
-      current.masks =
-        state.masks.map(m=>({
+          id:mask.id,
 
-          id:m.id,
+          x:mask.x,
 
-          x:m.x,
+          y:mask.y,
 
-          y:m.y,
+          w:mask.w,
 
-          w:m.w,
+          h:mask.h
 
-          h:m.h
+        })
+      );
 
-        }));
-
-      current.revealed = {};
-
-    }
+    problem.revealed = {};
 
   }
 
@@ -2026,183 +1662,564 @@ function addProblemFromEdit(){
 
 }
 
-
-/* =========================================
-   現在の編集内容を一時保存
-========================================= */
-
-function saveCurrentEditorTemporarily(){
-
-  const p =
-    getProblem();
-
-  if(!p) return;
+function addMask(){
 
   if(!state.editImage){
+
+    showToast(
+      "先に画像を追加してください"
+    );
+
     return;
+
   }
 
-  p.image =
-    state.editImage;
+  const mask = {
 
-  p.masks =
-    state.masks.map(m=>({
+    id:uid(),
 
-      id:m.id,
+    x:30,
 
-      x:m.x,
+    y:30,
 
-      y:m.y,
+    w:30,
 
-      w:m.w,
+    h:15
 
-      h:m.h
+  };
 
-    }));
+  state.masks.push(
+    mask
+  );
 
-  p.revealed = {};
+  state.selectedMask =
+    mask.id;
 
-  saveDB();
+  render();
 
 }
 
+function setupMaskControls(){
 
-/* =========================================
-   すべてのイベントを登録
-========================================= */
+  const editor =
+    $("editor");
+
+  if(!editor){
+
+    return;
+
+  }
+
+  document
+    .querySelectorAll(".mask")
+    .forEach(
+      element => {
+
+        const id =
+          element.dataset.maskId;
+
+        const mask =
+          state.masks.find(
+            m => m.id === id
+          );
+
+        if(!mask){
+
+          return;
+
+        }
+
+        element.addEventListener(
+          "pointerdown",
+          function(event){
+
+            if(
+              event.target.classList.contains(
+                "resize-handle"
+              )
+            ){
+
+              return;
+
+            }
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            state.selectedMask =
+              id;
+
+            const rect =
+              editor.getBoundingClientRect();
+
+            const startX =
+              event.clientX;
+
+            const startY =
+              event.clientY;
+
+            const startLeft =
+              mask.x;
+
+            const startTop =
+              mask.y;
+
+            element.setPointerCapture(
+              event.pointerId
+            );
+
+            function move(ev){
+
+              const dx =
+                (
+                  ev.clientX -
+                  startX
+                ) /
+                rect.width *
+                100;
+
+              const dy =
+                (
+                  ev.clientY -
+                  startY
+                ) /
+                rect.height *
+                100;
+
+              mask.x =
+                Math.max(
+                  0,
+                  Math.min(
+                    100 - mask.w,
+                    startLeft + dx
+                  )
+                );
+
+              mask.y =
+                Math.max(
+                  0,
+                  Math.min(
+                    100 - mask.h,
+                    startTop + dy
+                  )
+                );
+
+              element.style.left =
+                mask.x + "%";
+
+              element.style.top =
+                mask.y + "%";
+
+            }
+
+            function end(){
+
+              try{
+
+                element.releasePointerCapture(
+                  event.pointerId
+                );
+
+              }catch(error){}
+
+              element.removeEventListener(
+                "pointermove",
+                move
+              );
+
+              element.removeEventListener(
+                "pointerup",
+                end
+              );
+
+            }
+
+            element.addEventListener(
+              "pointermove",
+              move
+            );
+
+            element.addEventListener(
+              "pointerup",
+              end
+            );
+
+          }
+        );
+
+        const handle =
+          element.querySelector(
+            ".resize-handle"
+          );
+
+        if(!handle){
+
+          return;
+
+        }
+
+        handle.addEventListener(
+          "pointerdown",
+          function(event){
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            state.selectedMask =
+              id;
+
+            const rect =
+              editor.getBoundingClientRect();
+
+            const startX =
+              event.clientX;
+
+            const startY =
+              event.clientY;
+
+            const startW =
+              mask.w;
+
+            const startH =
+              mask.h;
+
+            handle.setPointerCapture(
+              event.pointerId
+            );
+
+            function resize(ev){
+
+              const dx =
+                (
+                  ev.clientX -
+                  startX
+                ) /
+                rect.width *
+                100;
+
+              const dy =
+                (
+                  ev.clientY -
+                  startY
+                ) /
+                rect.height *
+                100;
+
+              mask.w =
+                Math.max(
+                  5,
+                  Math.min(
+                    100 - mask.x,
+                    startW + dx
+                  )
+                );
+
+              mask.h =
+                Math.max(
+                  5,
+                  Math.min(
+                    100 - mask.y,
+                    startH + dy
+                  )
+                );
+
+              element.style.width =
+                mask.w + "%";
+
+              element.style.height =
+                mask.h + "%";
+
+            }
+
+            function end(){
+
+              try{
+
+                handle.releasePointerCapture(
+                  event.pointerId
+                );
+
+              }catch(error){}
+
+              handle.removeEventListener(
+                "pointermove",
+                resize
+              );
+
+              handle.removeEventListener(
+                "pointerup",
+                end
+              );
+
+            }
+
+            handle.addEventListener(
+              "pointermove",
+              resize
+            );
+
+            handle.addEventListener(
+              "pointerup",
+              end
+            );
+
+          }
+        );
+
+      }
+    );
+
+                }
+  function enableSorting(){
+
+  const rows =
+    document.querySelectorAll(
+      ".problem-row[draggable='true']"
+    );
+
+  let draggedId =
+    null;
+
+  rows.forEach(
+    row => {
+
+      row.addEventListener(
+        "dragstart",
+        function(event){
+
+          draggedId =
+            row.dataset.problemId;
+
+          row.classList.add(
+            "dragging"
+          );
+
+          if(event.dataTransfer){
+
+            event.dataTransfer.effectAllowed =
+              "move";
+
+            event.dataTransfer.setData(
+              "text/plain",
+              draggedId
+            );
+
+          }
+
+        }
+      );
+
+      row.addEventListener(
+        "dragend",
+        function(){
+
+          row.classList.remove(
+            "dragging"
+          );
+
+          document
+            .querySelectorAll(
+              ".problem-row"
+            )
+            .forEach(
+              r =>
+                r.classList.remove(
+                  "drop-target"
+                )
+            );
+
+          draggedId =
+            null;
+
+        }
+      );
+
+      row.addEventListener(
+        "dragover",
+        function(event){
+
+          event.preventDefault();
+
+          if(
+            draggedId &&
+            draggedId !==
+            row.dataset.problemId
+          ){
+
+            row.classList.add(
+              "drop-target"
+            );
+
+          }
+
+        }
+      );
+
+      row.addEventListener(
+        "dragleave",
+        function(){
+
+          row.classList.remove(
+            "drop-target"
+          );
+
+        }
+      );
+
+      row.addEventListener(
+        "drop",
+        function(event){
+
+          event.preventDefault();
+
+          row.classList.remove(
+            "drop-target"
+          );
+
+          let fromId =
+            draggedId;
+
+          if(
+            !fromId &&
+            event.dataTransfer
+          ){
+
+            fromId =
+              event.dataTransfer.getData(
+                "text/plain"
+              );
+
+          }
+
+          const toId =
+            row.dataset.problemId;
+
+          if(
+            !fromId ||
+            !toId ||
+            fromId === toId
+          ){
+
+            return;
+
+          }
+
+          const test =
+            getTest();
+
+          if(!test){
+
+            return;
+
+          }
+
+          const fromIndex =
+            test.problems.findIndex(
+              p => p.id === fromId
+            );
+
+          const toIndex =
+            test.problems.findIndex(
+              p => p.id === toId
+            );
+
+          if(
+            fromIndex === -1 ||
+            toIndex === -1
+          ){
+
+            return;
+
+          }
+
+          const moved =
+            test.problems.splice(
+              fromIndex,
+              1
+            )[0];
+
+          test.problems.splice(
+            toIndex,
+            0,
+            moved
+          );
+
+          saveDB();
+
+          render();
+
+        }
+      );
+
+    }
+  );
+
+}
 
 function bindEvents(){
 
-  /* =========================
-     テスト作成
-  ========================= */
-
-  const newTestButton =
+  const newTest =
     $("new-test");
 
-  if(newTestButton){
+  if(newTest){
 
-    newTestButton.onclick =
-      function(){
-
-        const t = {
-
-          id:uid(),
-
-          name:"新しいテスト",
-
-          problems:[]
-
-        };
-
-        db.tests.push(t);
-
-        saveDB();
-
-        state.testId = t.id;
-
-        go("create");
-
-      };
+    newTest.onclick =
+      createTest;
 
   }
 
+  const addProblemButton =
+    $("add-problem");
 
-  /* =========================
-     問題追加
-  ========================= */
+  if(addProblemButton){
 
-  document
-    .querySelectorAll(".add-problem")
-    .forEach(button=>{
-
-      button.onclick =
-        function(e){
-
-          e.preventDefault();
-
-          addProblem();
-
-        };
-
-    });
-
-
-  /* =========================
-     編集画面から問題追加
-  ========================= */
-
-  const addFromEdit =
-    $("add-problem-from-edit");
-
-  if(addFromEdit){
-
-    addFromEdit.onclick =
-      function(e){
-
-        e.preventDefault();
-
-        e.stopPropagation();
-
-        addProblemFromEdit();
-
-      };
+    addProblemButton.onclick =
+      addProblem;
 
   }
 
+  document
+    .querySelectorAll(
+      ".edit-problem"
+    )
+    .forEach(
+      button => {
 
-  /* =========================
-     問題編集
-  ========================= */
+        button.onclick =
+          function(){
+
+            openProblem(
+              button.dataset.id
+            );
+
+          };
+
+      }
+    );
 
   document
-    .querySelectorAll(".edit-problem")
-    .forEach(button=>{
+    .querySelectorAll(
+      ".delete-problem"
+    )
+    .forEach(
+      button => {
 
-      button.onclick =
-        function(e){
+        button.onclick =
+          function(){
 
-          e.preventDefault();
+            deleteProblem(
+              button.dataset.id
+            );
 
-          e.stopPropagation();
+          };
 
-          openProblem(
-            button.dataset.id
-          );
+      }
+    );
 
-        };
-
-    });
-
-
-  /* =========================
-     問題削除
-  ========================= */
-
-  document
-    .querySelectorAll(".delete-problem")
-    .forEach(button=>{
-
-      button.onclick =
-        function(e){
-
-          e.preventDefault();
-
-          e.stopPropagation();
-
-          const id =
-            button.dataset.id;
-
-          deleteProblem(id);
-
-        };
-
-    });
-
-
-  /* =========================
-     保存
-  ========================= */
+  const testName =
+    $("test-name");
 
   const saveCreate =
     $("save-create");
@@ -2212,16 +2229,17 @@ function bindEvents(){
     saveCreate.onclick =
       function(){
 
-        const t =
+        const test =
           getTest();
 
-        if(!t) return;
+        if(!test){
 
-        const input =
-          $("test-name");
+          return;
 
-        t.name =
-          input.value.trim() ||
+        }
+
+        test.name =
+          testName.value.trim() ||
           "無題のテスト";
 
         saveDB();
@@ -2232,34 +2250,30 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     画像選択
-  ========================= */
-
   const pickImage =
     $("pick-image");
 
   const imageInput =
     $("image-input");
 
-  if(pickImage && imageInput){
+  if(
+    pickImage &&
+    imageInput
+  ){
 
     pickImage.onclick =
-      function(e){
-
-        e.preventDefault();
+      function(){
 
         imageInput.click();
 
       };
 
     imageInput.onchange =
-      function(e){
+      function(){
 
         const file =
-          e.target.files &&
-          e.target.files[0];
+          imageInput.files &&
+          imageInput.files[0];
 
         if(file){
 
@@ -2271,119 +2285,70 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     問題保存
-  ========================= */
-
   const saveProblemButton =
     $("save-problem");
 
   if(saveProblemButton){
 
     saveProblemButton.onclick =
-      function(e){
-
-        e.preventDefault();
-
-        saveProblem();
-
-      };
+      saveProblem;
 
   }
 
-
-  /* =========================
-     隠し場所追加
-  ========================= */
-
-  const addMask =
+  const addMaskButton =
     $("add-mask");
 
-  if(addMask){
+  if(addMaskButton){
 
-    addMask.onclick =
-      function(e){
-
-        e.preventDefault();
-
-        if(!state.editImage){
-
-          showToast(
-            "先に画像を追加してください"
-          );
-
-          return;
-
-        }
-
-        const mask = {
-
-          id:uid(),
-
-          x:30,
-
-          y:30,
-
-          w:30,
-
-          h:15
-
-        };
-
-        state.masks.push(mask);
-
-        state.selectedMask =
-          mask.id;
-
-        render();
-
-      };
+    addMaskButton.onclick =
+      addMask;
 
   }
 
-
-  /* =========================
-     隠し場所削除
-  ========================= */
-
   document
-    .querySelectorAll(".delete-mask")
-    .forEach(button=>{
+    .querySelectorAll(
+      ".delete-mask"
+    )
+    .forEach(
+      button => {
 
-      button.onclick =
-        function(e){
+        button.onclick =
+          function(){
 
-          e.preventDefault();
+            const id =
+              button.dataset.id;
 
-          e.stopPropagation();
+            state.masks =
+              state.masks.filter(
+                mask =>
+                  mask.id !== id
+              );
 
-          const id =
-            button.dataset.id;
+            if(
+              state.selectedMask === id
+            ){
 
-          state.masks =
-            state.masks.filter(
-              m => m.id !== id
-            );
+              state.selectedMask =
+                null;
 
-          if(
-            state.selectedMask === id
-          ){
+            }
 
-            state.selectedMask = null;
+            render();
 
-          }
+          };
 
-          render();
+      }
+    );
 
-        };
+  const addFromEdit =
+    $("add-problem-from-edit");
 
-    });
+  if(addFromEdit){
 
+    addFromEdit.onclick =
+      addProblemFromEdit;
 
-  /* =========================
-     現在の問題削除
-  ========================= */
+  }
 
   const deleteCurrent =
     $("delete-current-problem");
@@ -2391,54 +2356,42 @@ function bindEvents(){
   if(deleteCurrent){
 
     deleteCurrent.onclick =
-      function(e){
-
-        e.preventDefault();
-
-        e.stopPropagation();
-
-        deleteCurrentProblem();
-
-      };
+      deleteCurrentProblem;
 
   }
 
+  document
+    .querySelectorAll(
+      ".settings-test"
+    )
+    .forEach(
+      button => {
 
-  /* =========================
-     赤枠操作
-  ========================= */
+        button.onclick =
+          function(){
 
-  setupMaskControls();
+            state.testId =
+              button.dataset.id;
 
+            go("settings");
 
-  /* =========================
-     並び替え
-  ========================= */
+          };
 
-  enableSorting();
-
-
-  /* =========================
-     設定 → ホーム
-  ========================= */
+      }
+    );
 
   document
-    .querySelectorAll(".back-home")
-    .forEach(button=>{
+    .querySelectorAll(
+      ".back-home"
+    )
+    .forEach(
+      button => {
 
-      button.onclick =
-        function(){
+        button.onclick =
+          () => go("home");
 
-          go("home");
-
-        };
-
-    });
-
-
-  /* =========================
-     テスト名変更
-  ========================= */
+      }
+    );
 
   const settingName =
     $("setting-name");
@@ -2448,12 +2401,16 @@ function bindEvents(){
     settingName.onchange =
       function(){
 
-        const t =
+        const test =
           getTest();
 
-        if(!t) return;
+        if(!test){
 
-        t.name =
+          return;
+
+        }
+
+        test.name =
           settingName.value.trim() ||
           "無題のテスト";
 
@@ -2463,11 +2420,6 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     固定テスト
-  ========================= */
-
   const fixedTest =
     $("fixed-test");
 
@@ -2476,23 +2428,29 @@ function bindEvents(){
     fixedTest.onchange =
       function(){
 
-        const t =
+        const test =
           getTest();
 
-        if(!t) return;
+        if(!test){
+
+          return;
+
+        }
 
         if(fixedTest.checked){
 
           db.fixedId =
-            t.id;
+            test.id;
 
         }else{
 
           if(
-            db.fixedId === t.id
+            db.fixedId ===
+            test.id
           ){
 
-            db.fixedId = null;
+            db.fixedId =
+              null;
 
           }
 
@@ -2506,125 +2464,117 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     テスト削除
-  ========================= */
-
   const deleteTestButton =
     $("delete-test");
 
   if(deleteTestButton){
 
     deleteTestButton.onclick =
-      function(e){
-
-        e.preventDefault();
-
-        e.stopPropagation();
-
-        deleteTest();
-
-      };
+      deleteTest;
 
   }
 
-
-  /* =========================
-     解答する
-  ========================= */
-
   document
-    .querySelectorAll(".play-test")
-    .forEach(button=>{
+    .querySelectorAll(
+      ".play-test"
+    )
+    .forEach(
+      button => {
 
-      button.onclick =
-        function(e){
+        button.onclick =
+          function(){
 
-          e.preventDefault();
+            state.testId =
+              button.dataset.id;
 
-          state.testId =
-            button.dataset.id;
+            state.answerIndex =
+              0;
 
-          state.answerIndex = 0;
+            const test =
+              getTest();
 
-          const t =
-            getTest();
+            if(
+              !test ||
+              test.problems.length === 0
+            ){
 
-          if(!t || !t.problems.length){
+              showToast(
+                "このテストには問題がありません"
+              );
 
-            showToast(
-              "このテストには問題がありません"
+              return;
+
+            }
+
+            test.problems.forEach(
+              problem => {
+
+                problem.revealed =
+                  {};
+
+              }
             );
 
-            return;
+            saveDB();
 
-          }
+            go("play");
 
-          t.problems.forEach(p=>{
+          };
 
-            p.revealed = {};
-
-          });
-
-          saveDB();
-
-          go("play");
-
-        };
-
-    });
-
-
-  /* =========================
-     解答：赤枠
-  ========================= */
+      }
+    );
 
   document
-    .querySelectorAll(".answer-mask")
-    .forEach(mask=>{
+    .querySelectorAll(
+      ".answer-mask"
+    )
+    .forEach(
+      mask => {
 
-      mask.onclick =
-        function(e){
+        mask.onclick =
+          function(){
 
-          e.preventDefault();
+            const test =
+              getTest();
 
-          e.stopPropagation();
+            if(!test){
 
-          const t =
-            getTest();
+              return;
 
-          if(!t) return;
+            }
 
-          const p =
-            t.problems[
-              state.answerIndex
-            ];
+            const problem =
+              test.problems[
+                state.answerIndex
+              ];
 
-          if(!p) return;
+            if(!problem){
 
-          if(!p.revealed){
-            p.revealed = {};
-          }
+              return;
 
-          const id =
-            mask.dataset.maskId;
+            }
 
-          p.revealed[id] =
-            !p.revealed[id];
+            if(!problem.revealed){
 
-          saveDB();
+              problem.revealed =
+                {};
 
-          render();
+            }
 
-        };
+            const id =
+              mask.dataset.maskId;
 
-    });
+            problem.revealed[id] =
+              !problem.revealed[id];
 
+            saveDB();
 
-  /* =========================
-     前へ
-  ========================= */
+            render();
+
+          };
+
+      }
+    );
 
   const prev =
     $("prev");
@@ -2648,11 +2598,6 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     次へ
-  ========================= */
-
   const next =
     $("next");
 
@@ -2661,14 +2606,18 @@ function bindEvents(){
     next.onclick =
       function(){
 
-        const t =
+        const test =
           getTest();
 
-        if(!t) return;
+        if(!test){
+
+          return;
+
+        }
 
         if(
           state.answerIndex <
-          t.problems.length - 1
+          test.problems.length - 1
         ){
 
           state.answerIndex++;
@@ -2685,34 +2634,41 @@ function bindEvents(){
 
   }
 
-
-  /* =========================
-     ホームへ
-  ========================= */
-
   document
-    .querySelectorAll(".quit")
-    .forEach(button=>{
+    .querySelectorAll(
+      ".quit,#back-home"
+    )
+    .forEach(
+      button => {
 
-      button.onclick =
-        function(){
+        button.onclick =
+          () => go("home");
 
-          go("home");
+      }
+    );
 
-        };
+  const backCreate =
+    $("back-create");
 
-    });
+  if(backCreate){
+
+    backCreate.onclick =
+      () => go("create");
+
+  }
+
+  setupMaskControls();
+
+  enableSorting();
 
 }
 
-
-/* =========================================
-   起動
-========================================= */
-
 function start(){
 
-  state.screen = "home";
+  loadDB();
+
+  state.screen =
+    "home";
 
   render();
 
@@ -2720,6 +2676,7 @@ function start(){
 
 start();
 
-</script>
+  </script>
+
 </body>
 </html>
