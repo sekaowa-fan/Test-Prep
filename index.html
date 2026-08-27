@@ -3803,20 +3803,25 @@ function bindEvents(){
   ========================= */
 
   const saveProblemButton =
-    $("save-problem");
+  $("save-problem");
 
-  if(saveProblemButton){
+if(saveProblemButton){
 
-    saveProblemButton.onclick =
-      function(){
+  saveProblemButton.onclick =
+    async function(){
 
-        saveProblem();
+      const success =
+        await saveProblem();
+
+      if(success){
 
         go("settings");
 
-      };
+      }
 
-  }
+    };
+
+}
 
   /* =========================
      保存して次の問題
