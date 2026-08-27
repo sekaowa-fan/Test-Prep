@@ -726,57 +726,304 @@ function normalizeDB(data){
 
 }
 
-function loadDB(){
+/* =================================================
+   IndexedDB 保存システム
+================================================= */
+
+const DB_NAME =
+  "TestPrepApp";
+
+const DB_VERSION =
+  1;
+
+const DB_STORE =
+  "appData";
+
+let idb = null;
+
+
+/* -------------------------------
+   IndexedDBを開く
+-------------------------------- */
+
+function openDatabase(){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const request =
+        indexedDB.open(
+          DB_NAME,
+          DB_VERSION
+        );
+
+      request.onupgradeneeded =
+        function(event){
+
+          const database =
+            event.target.result;
+
+          if(
+            !database.objectStoreNames.contains(
+              DB_STORE
+            )
+          ){
+
+            database.createObjectStore(
+              DB_STORE
+            );
+
+          }
+
+        };
+
+      request.onsuccess =
+        function(){
+
+          idb =
+            request.result;
+
+          resolve(idb);
+
+        };
+
+      request.onerror =
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+/* -------------------------------
+   IndexedDBへ保存
+-------------------------------- */
+
+async function saveDB(){
 
   try{
 
-    let raw =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
+    if(!idb){
 
-    /*
-      v2にデータがなければ、
-      以前のv1を読み込む
-    */
-
-    if(!raw){
-
-      raw =
-        localStorage.getItem(
-          OLD_STORAGE_KEY
-        );
+      await openDatabase();
 
     }
 
-    if(raw){
+    await new Promise(
+      function(resolve,reject){
 
-      db =
-        normalizeDB(
-          JSON.parse(raw)
-        );
+        const transaction =
+          idb.transaction(
+            DB_STORE,
+            "readwrite"
+          );
 
-      /*
-        v2へ移行して保存
-      */
+        const store =
+          transaction.objectStore(
+            DB_STORE
+          );
 
-      saveDB();
+        const request =
+          store.put(
+            db,
+            "main"
+          );
 
-    }else{
+        request.onsuccess =
+          function(){
 
-      db = {
+            resolve();
 
-        tests:[],
+          };
 
-        fixedId:null
+        request.onerror =
+          function(){
 
-      };
+            reject(
+              request.error
+            );
 
-    }
+          };
+
+      }
+    );
+
+    return true;
 
   }catch(error){
 
     console.error(
+      "IndexedDB保存エラー:",
+      error
+    );
+
+    showToast(
+      "保存に失敗しました"
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* -------------------------------
+   IndexedDBから読み込み
+-------------------------------- */
+
+async function loadDB(){
+
+  try{
+
+    await openDatabase();
+
+    const saved =
+      await new Promise(
+        function(resolve,reject){
+
+          const transaction =
+            idb.transaction(
+              DB_STORE,
+              "readonly"
+            );
+
+          const store =
+            transaction.objectStore(
+              DB_STORE
+            );
+
+          const request =
+            store.get(
+              "main"
+            );
+
+          request.onsuccess =
+            function(){
+
+              resolve(
+                request.result
+              );
+
+            };
+
+          request.onerror =
+            function(){
+
+              reject(
+                request.error
+              );
+
+            };
+
+        }
+      );
+
+    if(saved){
+
+      db =
+        normalizeDB(
+          saved
+        );
+
+      return;
+
+    }
+
+    /*
+      古いlocalStorageデータがあれば
+      IndexedDBへ移行
+    */
+
+    try{
+
+      const oldData =
+        localStorage.getItem(
+          STORAGE_KEY
+        );
+
+      if(oldData){
+
+        db =
+          normalizeDB(
+            JSON.parse(
+              oldData
+            )
+          );
+
+        await saveDB();
+
+        localStorage.removeItem(
+          STORAGE_KEY
+        );
+
+        return;
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        "旧データ移行失敗:",
+        error
+      );
+
+    }
+
+    try{
+
+      const oldV1 =
+        localStorage.getItem(
+          OLD_STORAGE_KEY
+        );
+
+      if(oldV1){
+
+        db =
+          normalizeDB(
+            JSON.parse(
+              oldV1
+            )
+          );
+
+        await saveDB();
+
+        localStorage.removeItem(
+          OLD_STORAGE_KEY
+        );
+
+        return;
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        "v1データ移行失敗:",
+        error
+      );
+
+    }
+
+    db = {
+
+      tests:[],
+
+      fixedId:null
+
+    };
+
+  }catch(error){
+
+    console.error(
+      "IndexedDB読み込みエラー:",
       error
     );
 
@@ -788,32 +1035,13 @@ function loadDB(){
 
     };
 
-  }
-
-}
-
-function saveDB(){
-
-  try{
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(db)
-    );
-
-  }catch(error){
-
-    console.error(
-      error
-    );
-
     showToast(
-      "保存できませんでした"
+      "保存データを読み込めませんでした"
     );
 
   }
 
-}
+            }
 
 /* =================================================
    現在のテスト・問題
