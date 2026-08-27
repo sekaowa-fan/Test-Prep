@@ -4107,15 +4107,18 @@ function render(){
 ================================================= */
 
 function start(){
-
-  loadDB();
+async function start(){
 
   /*
-    固定されたテストがあれば、
-    サイトを開いた瞬間に開始する。
+    保存データを先に読み込む
+  */
 
-    ただし問題が0問なら
-    ホーム画面を表示。
+  await loadDB();
+
+
+  /*
+    固定テストがあれば
+    起動直後に開始
   */
 
   if(db.fixedId){
@@ -4151,7 +4154,7 @@ function start(){
         }
       );
 
-      saveDB();
+      await saveDB();
 
       state.screen =
         "play";
