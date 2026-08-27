@@ -2641,7 +2641,7 @@ function setupMaskControls(){
    問題保存
 ================================================= */
 
-function saveProblem(){
+async function saveProblem(){
 
   const test =
     getTest();
@@ -2655,7 +2655,7 @@ function saveProblem(){
       "問題が見つかりません"
     );
 
-    return;
+    return false;
 
   }
 
@@ -2665,9 +2665,13 @@ function saveProblem(){
       "画像を追加してください"
     );
 
-    return;
+    return false;
 
   }
+
+  /*
+    問題データを更新
+  */
 
   problem.image =
     state.editImage;
@@ -2681,11 +2685,24 @@ function saveProblem(){
 
   problem.revealed = {};
 
-  saveDB();
+  /*
+    本当に保存できたか確認
+  */
 
-  showToast(
-    "保存しました"
-  );
+  const success =
+    await saveDB();
+
+  if(success){
+
+    showToast(
+      "保存しました"
+    );
+
+    return true;
+
+  }
+
+  return false;
 
 }
 
